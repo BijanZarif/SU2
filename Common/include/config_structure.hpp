@@ -94,7 +94,9 @@ private:
 	Hold_GridFixed,	/*!< \brief Flag hold fixed some part of the mesh during the deformation. */
 	Axisymmetric, /*!< \brief Flag for axisymmetric calculations */
 	DebugMode, /*!< \brief Flag for debug mode */
-  ionization;  /*!< \brief Flag for determining if free electron gas is in the mixture */
+  ionization,  /*!< \brief Flag for determining if free electron gas is in the mixture */
+  Hybrid_ROE,	/*!< \brief Flag for Hybrid ROE. */
+  SmartSGS; /*!< \brief Flag for Smart SGS. */
   double Damp_Engine_Inflow;	/*!< \brief Damping factor for the engine inlet. */
   double Damp_Engine_Bleed;	/*!< \brief Damping factor for the engine bleed. */
   double Damp_Engine_Exhaust;	/*!< \brief Damping factor for the engine exhaust. */
@@ -4289,6 +4291,18 @@ public:
 	 */
 	bool Low_Mach_Preconditioning(void);
 
+	/*!
+	 * \brief Get information about Hybrid ROE 
+	 * \return <code>TRUE</code> if we are using Hybrid ROE ; otherwise <code>FALSE</code>.
+	 */
+	bool GetHybridROE(void);
+
+    /*!
+     * \brief Get information about Smart SGS
+     * \return <code>TRUE</code> if we are using Smart SGS ; otherwise <code>FALSE</code>.
+     */
+    bool GetSmartSGS(void);
+    
 	/*!
 	 * \brief Get information about the poisson solver condition
 	 * \return <code>TRUE</code> if it is a poisson solver condition; otherwise <code>FALSE</code>.

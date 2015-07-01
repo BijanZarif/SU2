@@ -1213,7 +1213,31 @@ public:
 	 * \param[in] val_phi - Value of the adjoint velocity.
 	 */		
 	virtual void SetPhi_Old(double *val_phi);
+    
+    /*!
+	 * \brief A virtual member.
+	 * \param[in] val_phi - Value of the hybrid blending function.
+	 */		
+	virtual void SetPhiHybrid(double val_phi_hybrid);
+    
+    /*!
+	 * \brief Get the value of the hybrid blending function.
+	 * \return Value of the hybrid blending function
+	 */
+	virtual double GetPhiHybrid();
 
+    /*!
+     * \brief A virtual member.
+     * \param[in] val_phi - Value of the hybrid blending function.
+     */
+    virtual void SetmuEn(double val_mu_en);
+    
+    /*!
+     * \brief Get the value of the .
+     * \return Value of the hybrid blending function
+     */
+    virtual double GetmuEn();
+    
 	/*!
 	 * \brief A virtual member.
 	 * \param[in] Gamma - Ratio of Specific heats
@@ -2005,7 +2029,9 @@ protected:
 	double Precond_Beta;	/*!< \brief Low Mach number preconditioner value, Beta. */
   double *WindGust;           /*! < \brief Wind gust value */
   double *WindGustDer;        /*! < \brief Wind gust derivatives value */
-
+  double  phi_hybrid;          /*! < \brief Hybrid Blending Function value */
+  double  mu_en;            /*! < \brief Numerical Effective Diffusion value */
+    
 	/*--- Primitive variable definition ---*/
   
 	double *Primitive;	/*!< \brief Primitive variables (T, vx, vy, vz, P, rho, h, c) in compressible flows. */
@@ -2427,6 +2453,30 @@ public:
 	 * \param[in] val_solution - Value of the time spectral source term. for the index <i>val_var</i>.
 	 */
 	void SetTimeSpectral_Source(unsigned short val_var, double val_source);
+	
+    /*!
+	 * \brief Set the value of the hybrid blending function.
+	 * \param[in] val_phi_hybrid - Value of the hybrid blending function.
+	 */	
+	void SetPhiHybrid(double val_phi_hybrid);
+        
+	/*!
+	 * \brief Get the value of the hybrid blending function.
+	 * \return Value of the hybrid blending function.
+	 */
+	double GetPhiHybrid();
+
+    /*!
+     * \brief Set the value of the numerical effective diffusion
+     * \param[in] val_phi_hybrid - Value of the numerical effective diffusion.
+     */
+    void SetmuEn(double val_mu_en);
+    
+    /*!
+     * \brief Get the value of the Numerical Effective Diffusion.
+     * \return Value of the numerical effective diffusion.
+     */
+    double GetmuEn();
 
 	/*!
 	 * \brief Get the time spectral source term.
@@ -2623,6 +2673,12 @@ public:
 	 * \return Value of the rate of strain magnitude.
 	 */
 	double GetStrainMag(void);
+    
+    	/*!
+	 * \brief Get the value of the hybrid blending Function.
+	 * \return Value of the hybrid blending Function.
+	 */
+	double GetPhiHybrid();
   
   /*!
    * \brief Set the derivative of temperature with respect to density (at constant internal energy).

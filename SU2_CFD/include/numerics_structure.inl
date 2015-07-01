@@ -398,6 +398,8 @@ inline void CNumerics::SetNormal(double *val_normal) { Normal = val_normal; }
 
 inline void CNumerics::SetVolume(double val_volume) { Volume = val_volume; }
 
+inline void CNumerics::SetPhiHybrid(double val_phi_hybrid) { phi_hybrid = val_phi_hybrid; }
+
 inline void CSourcePieceWise_TurbSST::SetF1blending(double val_F1_i, double val_F1_j) { 
 	F1_i = val_F1_i; 
 	F1_j = val_F1_j;

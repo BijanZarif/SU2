@@ -1295,6 +1295,8 @@ void CTurbSASolver::Postprocessing(CGeometry *geometry, CSolver **solver_contain
   bool freesurface = (config->GetKind_Regime() == FREESURFACE);
   bool neg_spalart_allmaras = (config->GetKind_Turb_Model() == SA_NEG);
   
+  bool SmartSGS = config->GetSmartSGS();
+  double mu_en;
   
   /*--- Compute eddy viscosity ---*/
   
@@ -1318,6 +1320,10 @@ void CTurbSASolver::Postprocessing(CGeometry *geometry, CSolver **solver_contain
     
     muT = rho*fv1*nu_hat[0];
     
+    if (SmartSGS){
+          mu_en = solver_container[FLOW_SOL]->node[iPoint]->GetmuEn();
+          muT = max(muT - max(mu_en,0.0),0.0);
+    }
     if (neg_spalart_allmaras && (muT < 0.0)) muT = 0.0;
     
     node[iPoint]->SetmuT(muT);
@@ -1430,8 +1436,10 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
           idx++;
         }
       }
-      OutputVariables[iPoint* (unsigned long) nOutputVariables + idx] = numerics->GetProduction()/numerics->Volume - numerics->GetDestruction()/numerics->Volume + numerics->GetCrossProduction()/numerics->Volume;
-      OutputHeadingNames[idx] = "FullSource";
+//      OutputVariables[iPoint* (unsigned long) nOutputVariables + idx] = numerics->GetProduction()/numerics->Volume - numerics->GetDestruction()/numerics->Volume + numerics->GetCrossProduction()/numerics->Volume;
+//      OutputHeadingNames[idx] = "FullSource";
+      OutputVariables[iPoint* (unsigned long) nOutputVariables + idx] = solver_container[FLOW_SOL]->node[iPoint]->GetPhiHybrid();
+      OutputHeadingNames[idx] = "HybridBlending";
       idx++;
     }
     

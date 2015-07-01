@@ -216,6 +216,9 @@ public:
   double *Ys, **dFdYj, **dFdYi, *sumdFdYih, *sumdFdYjh, *sumdFdYieve, *sumdFdYjeve;
   unsigned short RHOS_INDEX, T_INDEX, TVE_INDEX, VEL_INDEX, P_INDEX,
   RHO_INDEX, H_INDEX, A_INDEX, RHOCVTR_INDEX, RHOCVVE_INDEX;
+  
+  double phi_hybrid;
+  
   CVariable *var;
     
 	/*!
@@ -312,6 +315,19 @@ public:
 	 * \param[in] val_v_j - Value of the primitive variable at point j.
 	 */
 	void SetPrimitive(double *val_v_i, double *val_v_j);
+    
+    	/*!
+	 * \brief Set the value of the Hybrid Blending Function.
+	 * \param[in] val_v_i - Value of the primitive variable at point i.
+	 * \param[in] val_v_j - Value of the primitive variable at point j.
+	 */
+	void SetPhiHybrid(double val_phi_hybrid);
+    
+    /* \brief Set the value of the Hybrid Blending Function.
+	 * \param[in] val_v_i - Value of the primitive variable at point i.
+	 * \param[in] val_v_j - Value of the primitive variable at point j.
+	 */
+	double GetPhiHybrid(double val_phi_hybrid);
 
 	/*!
 	 * \brief Set the value of the primitive variables.
@@ -1664,7 +1680,7 @@ public:
  */
 class CUpwRoe_Flow : public CNumerics {
 private:
-	bool implicit, grid_movement;
+	bool implicit, grid_movement, hybrid_roe;
 	double *Diff_U;
 	double *Velocity_i, *Velocity_j, *RoeVelocity;
 	double *ProjFlux_i, *ProjFlux_j;

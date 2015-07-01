@@ -2463,6 +2463,7 @@ void COutput::MergeSolution(CConfig *config, CGeometry *geometry, CSolver **solv
           
           if (compressible) {
             Buffer_Send_Res[jPoint] = solver[FLOW_SOL]->node[iPoint]->GetLaminarViscosity();
+            //Buffer_Send_Res[jPoint] = solver[FLOW_SOL]->node[iPoint]->GetPhiHybrid();
           }
           if (incompressible || freesurface) {
             Buffer_Send_Res[jPoint] = solver[FLOW_SOL]->node[iPoint]->GetLaminarViscosityInc();

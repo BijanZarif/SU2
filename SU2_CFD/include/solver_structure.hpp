@@ -489,6 +489,13 @@ public:
 	 * \param[in] config - Definition of the particular problem.
 	 */
 	virtual void Set_MPI_Undivided_Laplacian(CGeometry *geometry, CConfig *config);
+
+    /*!
+     * \brief A virtual member.
+     * \param[in] geometry - Geometrical definition of the problem.
+     * \param[in] config - Definition of the particular problem.
+     */
+//    virtual void SetHybrid_Blending(CGeometry *geometry, CConfig *config);
     
     /*!
 	 * \brief A virtual member.
@@ -2627,6 +2634,13 @@ public:
 	 * \param[in] config - Definition of the particular problem.
 	 */
 	void Set_MPI_Undivided_Laplacian(CGeometry *geometry, CConfig *config);
+
+    /*!
+     * \brief Compute the Blending Function for a Hybrid Central-Upwind Scheme.
+     * \param[in] geometry - Geometrical definition of the problem.
+     * \param[in] config - Definition of the particular problem.
+     */
+//    void SetHybrid_Blending(CGeometry *geometry, CConfig *config);
     
     /*!
 	 * \brief Compute the max eigenvalue.

@@ -602,6 +602,10 @@ void CConfig::SetConfig_Options(unsigned short val_iZone, unsigned short val_nZo
   addUnsignedShortOption("ADJTURB_LIN_ITER", AdjTurb_Linear_Iter, 10);
   /* DESCRIPTION: Entropy fix factor */
   addDoubleOption("ENTROPY_FIX_COEFF", EntropyFix_Coeff, 0.001);
+  /* DESCRIPTION: Hybrid ROE (Central / Upwind) */
+  addBoolOption("ROE_HYBRID", Hybrid_ROE, false);
+  /* DESCRIPTION: Hybrid ROE (Central / Upwind) */
+  addBoolOption("SMART_SGS", SmartSGS, false);
   
   /*!\par CONFIG_CATEGORY: Convergence\ingroup Config*/
   /*--- Options related to convergence ---*/

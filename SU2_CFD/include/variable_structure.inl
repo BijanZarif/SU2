@@ -127,6 +127,10 @@ inline double CVariable::GetSolution_Min(unsigned short val_var) { return Soluti
 
 inline double CVariable::GetPreconditioner_Beta() { return 0; }
 
+inline double CVariable::GetPhiHybrid() {return 0;}
+
+inline double CVariable::GetmuEn() {return 0;}
+
 inline void CVariable::SetPreconditioner_Beta( double val_Beta) { }
 
 inline double* CVariable::GetWindGust() { return 0; }
@@ -332,6 +336,10 @@ inline void CVariable::SetPressureInc(void) { }
 inline void CVariable::SetVelocityInc(void) { }
 
 inline void CVariable::SetPhi_Old(double *val_phi) { }
+
+inline void CVariable::SetPhiHybrid(double val_phi_hybrid) { }
+
+inline void CVariable::SetmuEn(double val_mu_en) { }
 
 inline void CVariable::SetDiffLevelSet(double val_difflevelset) { }
 
@@ -666,6 +674,14 @@ inline double CEulerVariable::GetPreconditioner_Beta() { return Precond_Beta; }
 
 inline void CEulerVariable::SetPreconditioner_Beta(double val_Beta) { Precond_Beta = val_Beta; }
 
+inline void CEulerVariable::SetPhiHybrid(double val_phi_hybrid) { phi_hybrid = val_phi_hybrid; }
+
+inline void CEulerVariable::SetmuEn(double val_mu_en) { mu_en = val_mu_en; }
+
+inline double CEulerVariable::GetPhiHybrid() {return phi_hybrid;}
+
+inline double CEulerVariable::GetmuEn() {return mu_en;}
+
 inline void CEulerVariable::SetWindGust( double* val_WindGust) { 
         for (unsigned short iDim = 0; iDim < nDim; iDim++)	
             WindGust[iDim] = val_WindGust[iDim];}
@@ -693,6 +709,8 @@ inline double CNSVariable::GetSpecificHeatCp(void) { return Primitive[nDim+8]; }
 inline double* CNSVariable::GetVorticity(void) { return Vorticity; }
 
 inline double CNSVariable::GetStrainMag(void) { return StrainMag; }
+
+inline double CNSVariable::GetPhiHybrid(void) { return phi_hybrid;}
 
 inline void CNSVariable::SetLaminarViscosity(double laminarViscosity) {
     Primitive[nDim+5] = laminarViscosity;

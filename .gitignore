@@ -36,3 +36,6 @@ Makefile
 contrib/autotools/bin
 contrib/autotools/include
 contrib/autotools/share
+
+# QuickStart folder
+QuickStart/

@@ -3397,6 +3397,15 @@ void CEulerSolver::Upwind_Residual(CGeometry *geometry, CSolver **solver_contain
   bool roe_turkel       = (config->GetKind_Upwind_Flow() == TURKEL);
   bool ideal_gas        = (config->GetKind_FluidModel() == STANDARD_AIR || config->GetKind_FluidModel() == IDEAL_GAS );
   
+  /*--- Molina ---*/
+  bool hybrid_roe       = config->GetHybridROE();
+  bool Smart_SGS        = config->GetSmartSGS();
+    double Delta_i, Laminar_Viscosity_i, Eddy_Viscosity_i, Density_i, StrainMag, *Vorticity, Omega;
+    double Baux, Gaux, TimeScale, Kaux, Lturb, Aaux, Volume, phi_hybrid, Omega_2, StrainMag_2, inv_TimeScale;
+    double ch1 = 3.0, ch2 = 1.0, ch3 = 2.0, cnu = 0.09, Const_DES = 0.65, phi_max = 1.0;
+    double *u_s, u_dn, *aux_t, aux_td, *Normal, *ProjFlux, *DeltaFlux, DeltaFlux_t, Area, *UnitNormal;
+    double Mean_Density, Mean_Pressure, *Mean_Velocity, Mean_Enthalpy, Mean_Volume, Volume_i, Volume_j, mu_en, du_t;
+
   /*--- Loop over all the edges ---*/
   
   for (iEdge = 0; iEdge < geometry->GetnEdge(); iEdge++) {
@@ -3542,10 +3551,101 @@ void CEulerSolver::Upwind_Residual(CGeometry *geometry, CSolver **solver_contain
       
     }
     
+    /*--- Molina - Testing a blending Function  ---*/
+    if (hybrid_roe){
+        Delta_i = pow(geometry->node[iPoint]->GetVolume(),1.0/3.0);
+        Density_i = V_i[nDim+2]; 
+        Laminar_Viscosity_i = V_i[nDim+5] /Density_i;
+        Eddy_Viscosity_i = V_i[nDim+6]/Density_i;
+        StrainMag = node[iPoint]->GetStrainMag();
+        Vorticity = node[iPoint]->GetVorticity();
+        Omega = sqrt(Vorticity[0]*Vorticity[0]+ Vorticity[1]*Vorticity[1]+ Vorticity[2]*Vorticity[2]);
+        
+        Omega_2 = pow(Omega,2.0);
+        StrainMag_2 = pow(StrainMag,2.0);
+        Baux = (ch3 * Omega * max(StrainMag, Omega)) / max((StrainMag_2+Omega_2)/2.0,1E-20);
+        Gaux = tanh(pow(Baux,4.0));
+        TimeScale = config->GetLength_Ref() / config->GetModVel_FreeStream();
+        
+        inv_TimeScale = 1.0/TimeScale;
+        
+        Kaux = max(pow((Omega_2 + StrainMag_2)/2.0,0.5), 0.1 * inv_TimeScale);
+        
+        Lturb = (Eddy_Viscosity_i + Laminar_Viscosity_i)/pow(pow(cnu,1.5)*Kaux,0.5);
+        Aaux = ch2 * max(((Const_DES*Delta_i/Lturb)/Gaux) - 0.5, 0.0);
+        phi_hybrid = phi_max * tanh(pow(Aaux,ch1));
+        
+        numerics->SetPhiHybrid(phi_hybrid);
+        node[iPoint]->SetPhiHybrid(phi_hybrid);
+        }
+    
     /*--- Compute the residual ---*/
     
     numerics->ComputeResidual(Res_Conv, Jacobian_i, Jacobian_j, config);
 
+    /*--- Molina - Testing Effective Numerical Diffusion  ---*/
+    if (Smart_SGS){
+          Normal = geometry->edge[iEdge]->GetNormal();
+          
+          /*--- Face area (norm or the normal vector) ---*/
+          Area = 0.0;
+          for (iDim = 0; iDim < nDim; iDim++)
+              Area += Normal[iDim]*Normal[iDim];
+          Area = sqrt(Area);
+          
+          /*-- Unit Normal ---*/
+          for (iDim = 0; iDim < nDim; iDim++)
+              UnitNormal[iDim] = Normal[iDim]/Area;
+          
+          /*--- Calculate the jump in the shear component of momentum  ---*/
+          for (iDim = 0; iDim < nDim; iDim++)
+              u_s[iDim] = V_i[iDim+1] - V_j[iDim+1];
+          
+          u_dn = 0.0;
+          for (iDim = 0; iDim < nDim; iDim++)
+              u_dn += u_s[iDim]*UnitNormal[iDim];
+          
+          for (iDim = 0; iDim < nDim; iDim++)
+              aux_t[iDim] = u_s[iDim] - u_dn * UnitNormal[iDim];
+          
+          if (nDim == 2) aux_td = 1.0/max(sqrt(aux_t[0]*aux_t[0] + aux_t[1]*aux_t[1]),1.0e-20);
+          if (nDim == 3) aux_td = 1.0/max(sqrt(aux_t[0]*aux_t[0] + aux_t[1]*aux_t[1] + aux_t[2]*aux_t[2]),1.0e-20);
+          
+          for (iDim = 0; iDim < nDim; iDim++)
+              aux_t[iDim] *= aux_td;
+          
+          /*--- Find the directed delta momentum flux diffusion component in t_i direction  ---*/
+          /*--- Flux Central - Flux Upwind  ---*/
+          du_t = 0.0;
+          for (iDim = 0; iDim < nDim; iDim++)
+              du_t+= u_s[iDim] * aux_t[iDim];
+          
+          /*--- Compute Fcentral flux ---*/
+          
+          for (iDim = 0; iDim < nDim; iDim++)
+              Mean_Velocity[iDim] = 0.5*(V_i[iDim+1]+V_j[iDim+1]);
+          Mean_Pressure = 0.5*(V_i[nDim+1]+V_j[nDim+1]);
+          Mean_Density = 0.5*(V_i[nDim+2]+V_j[nDim+2]);
+          Mean_Enthalpy = 0.5*(V_i[nDim+3]+V_j[nDim+3]);
+          numerics->GetInviscidProjFlux(&Mean_Density, Mean_Velocity, &Mean_Pressure, &Mean_Enthalpy, Normal, ProjFlux);
+          
+          for (iDim = 0; iDim < nDim; iDim++)
+              DeltaFlux[iDim] = ProjFlux[iDim+1] - Res_Conv[iDim+1];
+          
+          DeltaFlux_t=0.0;
+          for (iDim = 0; iDim < nDim; iDim++)
+              DeltaFlux_t += DeltaFlux[iDim]*aux_t[iDim];
+          
+          Volume_i = geometry->node[iPoint]->GetVolume();
+          Volume_j = geometry->node[jPoint]->GetVolume();
+          Mean_Volume = 0.5*(Volume_i+Volume_j);
+          
+          /*--- Now find the effective numerical (en) diffusion at the face: ---*/
+          mu_en = Mean_Volume*DeltaFlux_t/max(fabs(Area)*du_t, 1.0e-20);
+          node[iPoint]->SetmuEn(mu_en);
+          
+      }
+      
     /*--- Update residual value ---*/
     
     LinSysRes.AddBlock(iPoint, Res_Conv);

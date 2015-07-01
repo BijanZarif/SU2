@@ -1473,10 +1473,9 @@ CUpwRoe_Flow::CUpwRoe_Flow(unsigned short val_nDim, unsigned short val_nVar, CCo
   implicit = (config->GetKind_TimeIntScheme_Flow() == EULER_IMPLICIT);
   grid_movement = config->GetGrid_Movement();
   kappa = config->GetRoe_Kappa(); // 1 is unstable
-
   Gamma = config->GetGamma();
+  hybrid_roe = config->GetHybridROE();
   Gamma_Minus_One = Gamma - 1.0;
-  
   Diff_U = new double [nVar];
   Velocity_i = new double [nDim];
   Velocity_j = new double [nDim];
@@ -1667,12 +1666,20 @@ void CUpwRoe_Flow::ComputeResidual(double *val_residual, double **val_Jacobian_i
     
     /*--- Roe's Flux approximation ---*/
     
-    for (iVar = 0; iVar < nVar; iVar++) {
-      val_residual[iVar] = 0.5*(ProjFlux_i[iVar]+ProjFlux_j[iVar]);
-      for (jVar = 0; jVar < nVar; jVar++)
-        val_residual[iVar] -= 0.5*Lambda[jVar]*delta_wave[jVar]*P_Tensor[iVar][jVar]*Area;
+    if (hybrid_roe){
+        for (iVar = 0; iVar < nVar; iVar++) {
+          val_residual[iVar] = 0.5*(ProjFlux_i[iVar]+ProjFlux_j[iVar]);
+          for (jVar = 0; jVar < nVar; jVar++)
+            val_residual[iVar] -= phi_hybrid * 0.5*Lambda[jVar]*delta_wave[jVar]*P_Tensor[iVar][jVar]*Area;
+        }
     }
-    
+    else{
+        for (iVar = 0; iVar < nVar; iVar++) {
+          val_residual[iVar] = 0.5*(ProjFlux_i[iVar]+ProjFlux_j[iVar]);
+          for (jVar = 0; jVar < nVar; jVar++)
+            val_residual[iVar] -= 0.5*Lambda[jVar]*delta_wave[jVar]*P_Tensor[iVar][jVar]*Area;
+        }        
+    }
     /*--- Flux contribution due to grid motion ---*/
     
     if (grid_movement) {
@@ -1697,6 +1704,8 @@ void CUpwRoe_Flow::ComputeResidual(double *val_residual, double **val_Jacobian_i
     GetInviscidProjJac(Velocity_i, &Energy_i, Normal, kappa, val_Jacobian_i);
     GetInviscidProjJac(Velocity_j, &Energy_j, Normal, kappa, val_Jacobian_j);
     
+    //cout << "Kappa " << kappa << endl; 
+    
     /*--- Diference variables iPoint and jPoint ---*/
     
     for (iVar = 0; iVar < nVar; iVar++)
@@ -1704,23 +1713,45 @@ void CUpwRoe_Flow::ComputeResidual(double *val_residual, double **val_Jacobian_i
     
     /*--- Roe's Flux approximation ---*/
     
-    for (iVar = 0; iVar < nVar; iVar++) {
-      
-      val_residual[iVar] = kappa*(ProjFlux_i[iVar]+ProjFlux_j[iVar]);
-      for (jVar = 0; jVar < nVar; jVar++) {
-        Proj_ModJac_Tensor_ij = 0.0;
-        
-        /*--- Compute |Proj_ModJac_Tensor| = P x |Lambda| x inverse P ---*/
-        
-        for (kVar = 0; kVar < nVar; kVar++)
-          Proj_ModJac_Tensor_ij += P_Tensor[iVar][kVar]*Lambda[kVar]*invP_Tensor[kVar][jVar];
-        
-        val_residual[iVar] -= (1.0-kappa)*Proj_ModJac_Tensor_ij*Diff_U[jVar]*Area;
-        val_Jacobian_i[iVar][jVar] += (1.0-kappa)*Proj_ModJac_Tensor_ij*Area;
-        val_Jacobian_j[iVar][jVar] -= (1.0-kappa)*Proj_ModJac_Tensor_ij*Area;
-        
-      }
-      
+    if (hybrid_roe){
+        for (iVar = 0; iVar < nVar; iVar++) {
+          
+          val_residual[iVar] = kappa*(ProjFlux_i[iVar]+ProjFlux_j[iVar]);
+          for (jVar = 0; jVar < nVar; jVar++) {
+            Proj_ModJac_Tensor_ij = 0.0;
+            
+            /*--- Compute |Proj_ModJac_Tensor| = P x |Lambda| x inverse P ---*/
+            
+            for (kVar = 0; kVar < nVar; kVar++)
+              Proj_ModJac_Tensor_ij += P_Tensor[iVar][kVar]*Lambda[kVar]*invP_Tensor[kVar][jVar];
+            
+            val_residual[iVar] -= phi_hybrid*(1.0-kappa)*Proj_ModJac_Tensor_ij*Diff_U[jVar]*Area;
+            val_Jacobian_i[iVar][jVar] += phi_hybrid*(1.0-kappa)*Proj_ModJac_Tensor_ij*Area;
+            val_Jacobian_j[iVar][jVar] -= phi_hybrid*(1.0-kappa)*Proj_ModJac_Tensor_ij*Area;
+            
+          }
+
+        }
+    }
+    else{
+        for (iVar = 0; iVar < nVar; iVar++) {
+          
+          val_residual[iVar] = kappa*(ProjFlux_i[iVar]+ProjFlux_j[iVar]);
+          for (jVar = 0; jVar < nVar; jVar++) {
+            Proj_ModJac_Tensor_ij = 0.0;
+            
+            /*--- Compute |Proj_ModJac_Tensor| = P x |Lambda| x inverse P ---*/
+            
+            for (kVar = 0; kVar < nVar; kVar++)
+              Proj_ModJac_Tensor_ij += P_Tensor[iVar][kVar]*Lambda[kVar]*invP_Tensor[kVar][jVar];
+            
+            val_residual[iVar] -= phi_hybrid*(1.0-kappa)*Proj_ModJac_Tensor_ij*Diff_U[jVar]*Area;
+            val_Jacobian_i[iVar][jVar] += phi_hybrid*(1.0-kappa)*Proj_ModJac_Tensor_ij*Area;
+            val_Jacobian_j[iVar][jVar] -= phi_hybrid*(1.0-kappa)*Proj_ModJac_Tensor_ij*Area;
+            
+          }
+
+        }        
     }
     
     /*--- Jacobian contributions due to grid motion ---*/

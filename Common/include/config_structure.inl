@@ -1029,6 +1029,10 @@ inline bool CConfig::GetPoissonSolver(void) { return PoissonSolver; }
 
 inline bool CConfig::Low_Mach_Preconditioning(void) { return Low_Mach_Precon; }
 
+inline bool CConfig::GetHybridROE(void) { return Hybrid_ROE;}
+
+inline bool CConfig::GetSmartSGS(void) { return SmartSGS;}
+
 inline bool CConfig::GetInletConditionsDefined(void) { return Inlet_Outlet_Defined; }
 
 inline bool CConfig::GetGravityForce(void) { return GravityForce; }
