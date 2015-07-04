@@ -1296,7 +1296,9 @@ void CTurbSASolver::Postprocessing(CGeometry *geometry, CSolver **solver_contain
   bool neg_spalart_allmaras = (config->GetKind_Turb_Model() == SA_NEG);
   
   bool SmartSGS = config->GetSmartSGS();
-  double mu_en;
+    unsigned long iExtIter = config->GetExtIter();
+    unsigned long RestartIter = config->GetUnst_RestartIter();
+  double mu_en=0.0;
   
   /*--- Compute eddy viscosity ---*/
   
@@ -1321,8 +1323,9 @@ void CTurbSASolver::Postprocessing(CGeometry *geometry, CSolver **solver_contain
     muT = rho*fv1*nu_hat[0];
     
     if (SmartSGS){
-          mu_en = solver_container[FLOW_SOL]->node[iPoint]->GetmuEn();
+          if (iExtIter > RestartIter) mu_en = solver_container[FLOW_SOL]->node[iPoint]->GetmuEn();
           muT = max(muT - max(mu_en,0.0),0.0);
+          cout << muT << " " << mu_en << endl;
     }
     if (neg_spalart_allmaras && (muT < 0.0)) muT = 0.0;
     
@@ -1436,11 +1439,18 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
           idx++;
         }
       }
-//      OutputVariables[iPoint* (unsigned long) nOutputVariables + idx] = numerics->GetProduction()/numerics->Volume - numerics->GetDestruction()/numerics->Volume + numerics->GetCrossProduction()/numerics->Volume;
-//      OutputHeadingNames[idx] = "FullSource";
-      OutputVariables[iPoint* (unsigned long) nOutputVariables + idx] = solver_container[FLOW_SOL]->node[iPoint]->GetPhiHybrid();
-      OutputHeadingNames[idx] = "HybridBlending";
-      idx++;
+      if (config->GetHybridROE()){
+        OutputVariables[iPoint* (unsigned long) nOutputVariables + idx] = solver_container[FLOW_SOL]->node[iPoint]->GetPhiHybrid();
+        OutputHeadingNames[idx] = "HybridBlending";
+        idx++;}
+      else if (config->GetSmartSGS()){
+        OutputVariables[iPoint* (unsigned long) nOutputVariables + idx] = solver_container[FLOW_SOL]->node[iPoint]->GetmuEn();
+        OutputHeadingNames[idx] = "EffectiveNumericalDiffusion";
+        idx++;}
+      else{
+       OutputVariables[iPoint* (unsigned long) nOutputVariables + idx] = numerics->GetProduction()/numerics->Volume - numerics->GetDestruction()/numerics->Volume + numerics->GetCrossProduction()/numerics->Volume;
+       OutputHeadingNames[idx] = "FullSource";
+       idx++;}
     }
     
   }

@@ -1704,8 +1704,6 @@ void CUpwRoe_Flow::ComputeResidual(double *val_residual, double **val_Jacobian_i
     GetInviscidProjJac(Velocity_i, &Energy_i, Normal, kappa, val_Jacobian_i);
     GetInviscidProjJac(Velocity_j, &Energy_j, Normal, kappa, val_Jacobian_j);
     
-    //cout << "Kappa " << kappa << endl; 
-    
     /*--- Diference variables iPoint and jPoint ---*/
     
     for (iVar = 0; iVar < nVar; iVar++)
@@ -1745,9 +1743,9 @@ void CUpwRoe_Flow::ComputeResidual(double *val_residual, double **val_Jacobian_i
             for (kVar = 0; kVar < nVar; kVar++)
               Proj_ModJac_Tensor_ij += P_Tensor[iVar][kVar]*Lambda[kVar]*invP_Tensor[kVar][jVar];
             
-            val_residual[iVar] -= phi_hybrid*(1.0-kappa)*Proj_ModJac_Tensor_ij*Diff_U[jVar]*Area;
-            val_Jacobian_i[iVar][jVar] += phi_hybrid*(1.0-kappa)*Proj_ModJac_Tensor_ij*Area;
-            val_Jacobian_j[iVar][jVar] -= phi_hybrid*(1.0-kappa)*Proj_ModJac_Tensor_ij*Area;
+            val_residual[iVar] -= (1.0-kappa)*Proj_ModJac_Tensor_ij*Diff_U[jVar]*Area;
+            val_Jacobian_i[iVar][jVar] += (1.0-kappa)*Proj_ModJac_Tensor_ij*Area;
+            val_Jacobian_j[iVar][jVar] -= (1.0-kappa)*Proj_ModJac_Tensor_ij*Area;
             
           }
 

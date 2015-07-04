@@ -3401,10 +3401,10 @@ void CEulerSolver::Upwind_Residual(CGeometry *geometry, CSolver **solver_contain
   bool hybrid_roe       = config->GetHybridROE();
   bool Smart_SGS        = config->GetSmartSGS();
     double Delta_i, Laminar_Viscosity_i, Eddy_Viscosity_i, Density_i, StrainMag, *Vorticity, Omega;
-    double Baux, Gaux, TimeScale, Kaux, Lturb, Aaux, Volume, phi_hybrid, Omega_2, StrainMag_2, inv_TimeScale;
+    double Baux, Gaux, TimeScale, Kaux, Lturb, Aaux, phi_hybrid, Omega_2, StrainMag_2, inv_TimeScale;
     double ch1 = 3.0, ch2 = 1.0, ch3 = 2.0, cnu = 0.09, Const_DES = 0.65, phi_max = 1.0;
-    double *u_s, u_dn, *aux_t, aux_td, *Normal, *ProjFlux, *DeltaFlux, DeltaFlux_t, Area, *UnitNormal;
-    double Mean_Density, Mean_Pressure, *Mean_Velocity, Mean_Enthalpy, Mean_Volume, Volume_i, Volume_j, mu_en, du_t;
+    double u_s[3]={0.0,0.0,0.0}, u_dn, aux_t[3]={0.0,0.0,0.0}, aux_td=0.0, *Normal, ProjFlux[3]={0.0,0.0,0.0}, DeltaFlux[3]={0.0,0.0,0.0}, DeltaFlux_t, Area, UnitNormal[3]={0.0,0.0,0.0};
+    double Mean_Density, Mean_Pressure, Mean_Velocity[3]={0.0,0.0,0.0}, Mean_Enthalpy, Mean_Volume, Volume_i, Volume_j, mu_en, du_t;
 
   /*--- Loop over all the edges ---*/
   
@@ -3599,7 +3599,7 @@ void CEulerSolver::Upwind_Residual(CGeometry *geometry, CSolver **solver_contain
           
           /*--- Calculate the jump in the shear component of momentum  ---*/
           for (iDim = 0; iDim < nDim; iDim++)
-              u_s[iDim] = V_i[iDim+1] - V_j[iDim+1];
+              u_s[iDim] = (V_i[iDim+1]*V_i[nDim+2]) - (V_j[iDim+1]*V_j[nDim+2]);
           
           u_dn = 0.0;
           for (iDim = 0; iDim < nDim; iDim++)
