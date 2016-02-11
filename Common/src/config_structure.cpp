@@ -3302,6 +3302,13 @@ void CConfig::SetOutput(unsigned short val_software, unsigned short val_izone) {
           cout << "The method includes a grid stretching correction (p = 0.3)."<< endl;
           cout << "Second order integration." << endl;
         }
+        if (Kind_Centered_Flow == JST_DUCROS) {
+          cout << "Jameson-Schmidt-Turkel scheme for the flow inviscid terms."<< endl;
+          cout << "JST viscous coefficients (1st, 2nd): " << Kappa_1st_Flow
+          << ", " << Kappa_2nd_Flow << "."<< endl;
+          cout << "The method includes a grid stretching correction (p = 0.3)."<< endl;
+          cout << "Second order integration." << endl;
+          }
         if (Kind_Centered_Flow == LAX) {
           cout << "Lax-Friedrich scheme for the flow inviscid terms."<< endl;
           cout << "First order integration." << endl;
@@ -3316,6 +3323,7 @@ void CConfig::SetOutput(unsigned short val_software, unsigned short val_izone) {
 				if (Kind_Upwind_Flow == SW)	cout << "Steger-Warming solver for the flow inviscid terms."<< endl;
 				if (Kind_Upwind_Flow == MSW)	cout << "Modified Steger-Warming solver for the flow inviscid terms."<< endl;
         if (Kind_Upwind_Flow == CUSP)	cout << "CUSP solver for the flow inviscid terms."<< endl;
+                if (Kind_Upwind_Flow == L2ROE) cout << "L2ROE solver for the flow inviscid terms."<< endl;
         switch (SpatialOrder_Flow) {
           case FIRST_ORDER: cout << "First order integration." << endl; break;
           case SECOND_ORDER: cout << "Second order integration." << endl; break;
