@@ -678,7 +678,10 @@ private:
   bool ParMETIS;      /*!< \brief Boolean for activating ParMETIS mode (while testing). */
   unsigned short DirectDiff; /*!< \brief Direct Differentation mode. */
   bool DiscreteAdjoint; /*!< \brief AD-based discrete adjoint mode. */
-  
+  unsigned long Wrt_Surf_Freq_DualTime;	/*!< \brief Writing surface solution frequency for Dual Time. */
+  double Const_DES;   /*!< \brief Detached Eddy Simulation Constant. */
+  unsigned short Kind_HybridRANSLES; /*!< \brief Kind of Hybrid RANS/LES. */
+    
   /*--- all_options is a map containing all of the options. This is used during config file parsing
   to track the options which have not been set (so the default values can be used). Without this map
    there would be no list of all the config file options. ---*/
@@ -5285,7 +5288,24 @@ public:
 	 * \return Value of the relaxation method
 	 */
 	unsigned short GetRelaxation_Method_FSI(void);
+    
+    /*!
+     * \brief Get the frequency for writing the surface solution file in Dual Time.
+     * \return It writes the surface solution file with this frequency.
+     */
+    unsigned long GetWrt_Surf_Freq_DualTime(void);
 
+    /*!
+     * \brief Get the Kind of Hybrid RANS/LES.
+     * \return Verbosity level for the console output.
+     */
+    unsigned short GetKind_HybridRANSLES(void);
+    
+    /*!
+     * \brief Get the DES Constant.
+     * \return Verbosity level for the console output.
+     */
+    double GetConst_DES(void);
 
 
 };

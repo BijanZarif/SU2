@@ -578,6 +578,19 @@ static const map<string, ENUM_TRANS_MODEL> Trans_Model_Map = CCreateMap<string, 
 ("LM", LM);
 
 /*!
+ * \brief types of hybrid RANS/LES models
+ */
+enum ENUM_HYBRIDRANSLES {
+  NO_HYBRIDRANSLES = 0, /*!< \brief No turbulence model. */
+  SA_DES   = 1, /*!< \brief Kind of Hybrid RANS/LES (SA - Detached Eddy Simulation). */
+  SA_DDES  = 2  /*!< \brief Kind of Hybrid RANS/LES (SA - Delayed Detached Eddy Simulation). */
+};
+static const map<string, ENUM_HYBRIDRANSLES> HybridRANSLES_Map = CCreateMap<string, ENUM_HYBRIDRANSLES>
+("NONE", NO_HYBRIDRANSLES)
+("SA_DES", SA_DES)
+("SA_DDES", SA_DDES);
+
+/*!
  * \brief type of time integration schemes
  */
 enum ENUM_TIME_INT {

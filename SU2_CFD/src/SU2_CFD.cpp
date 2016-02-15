@@ -479,6 +479,12 @@ int main(int argc, char *argv[]) {
           
         }
     
+    /* --- Export Surface Solution File for Unsteady Simulations ---*/
+    
+    if ((config_container[ZONE_0]->GetUnsteady_Simulation() == DT_STEPPING_2ND) && (ExtIter % config_container[ZONE_0]->GetWrt_Surf_Freq_DualTime() == 0)) {
+      output->SetSurfaceCSV_Flow(config_container[ZONE_0], geometry_container[ZONE_0][MESH_0], solver_container[ZONE_0][MESH_0][FLOW_SOL], ExtIter, ZONE_0);
+    }
+    
     /*--- If the convergence criteria has been met, terminate the simulation. ---*/
     
     if (StopCalc) break;

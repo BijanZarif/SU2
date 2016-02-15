@@ -1277,6 +1277,18 @@ void CConfig::SetConfig_Options(unsigned short val_iZone, unsigned short val_nZo
 
   /* DESCRIPTION: Activate ParMETIS mode for testing */
   addBoolOption("PARMETIS", ParMETIS, false);
+    
+  /*--- options that are used in the Hybrid RANS/LES Simulations  ---*/
+  /*!\par CONFIG_CATEGORY:Hybrid_RANSLES Options\ingroup Config*/
+  
+  /* DESCRIPTION: Writing surface solution file frequency for dual time */
+  addUnsignedLongOption("WRT_SURF_FREQ_DUALTIME", Wrt_Surf_Freq_DualTime, 1);
+  
+  /* DESCRIPTION: DES Constant */
+  addDoubleOption("DES_CONST", Const_DES, 0.65);
+
+  /* DESCRIPTION: Specify Hybrid RANS/LES model */
+  addEnumOption("HYBRID_RANSLES", Kind_HybridRANSLES, HybridRANSLES_Map, NO_HYBRIDRANSLES);
   
   /* END_CONFIG_OPTIONS */
 
