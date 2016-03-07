@@ -1354,6 +1354,8 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
   su2double **PrimVar_Grad;
   unsigned short iDim, jDim;
     
+  //su2double fd_print[nPointDomain];
+    
   for (iPoint = 0; iPoint < nPointDomain; iPoint++) {
     
     /*--- Conservative variables w/o reconstruction ---*/
@@ -1408,7 +1410,12 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
     else if (config->GetKind_HybridRANSLES()==SA_DDES){
 
       dist_wall = geometry->node[iPoint]->GetWall_Distance();
-      Delta = pow(geometry -> node[iPoint]->GetVolume(),1.0/3.0);
+      
+      if (nDim==2)
+          Delta = pow(geometry -> node[iPoint]->GetVolume(),1.0/2.0);
+      else
+          Delta = pow(geometry -> node[iPoint]->GetVolume(),1.0/3.0);
+        
       distDES = Const_DES * Delta;
       PrimVar_Grad=solver_container[FLOW_SOL]->node[iPoint]->GetGradient_Primitive();
         
@@ -1435,7 +1442,7 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
         distDES_tilde=dist_wall-f_d*max(0.0,(dist_wall-distDES));
         
         /*--- Set distance to the surface with DDES distance ---*/
-        
+        //fd_print[iPoint]=f_d;
         numerics->SetDistance(distDES_tilde, 0.0);
     }
       
@@ -1484,7 +1491,19 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
       
     }
   }
-  
+//  string name("u_n");
+//  string extension(".txt");
+//  string filename (name+extension);
+//  ofstream mysolution;
+//  mysolution.open(filename.c_str());
+//  for (iPoint = 0; iPoint < nPointDomain; iPoint++) {
+//    //for (iVar = 0; iVar < nVar; iVar++) {
+//       //mysolution << node[iPoint]->GetSolution(iVar) << "\n" ;
+//     //}
+//    mysolution << fd_print[iPoint] << "\t" <<geometry->node[iPoint]->GetWall_Distance() << "\n";
+//   }
+//   mysolution.close();
+    
 }
 
 void CTurbSASolver::Source_Template(CGeometry *geometry, CSolver **solver_container, CNumerics *numerics,
@@ -2501,6 +2520,11 @@ void CTurbSASolver::LoadRestart(CGeometry **geometry, CSolver ***solver, CConfig
     solver[iMesh][TURB_SOL]->Postprocessing(geometry[iMesh], solver[iMesh], config, iMesh);
   }
   
+}
+
+void CTurbSASolver::DES_LenghtScale(CGeometry *geometry, CSolver **solver_container, CNumerics *numerics,
+                                    CConfig *config, unsigned short iMesh) {
+    
 }
 
 CTurbSSTSolver::CTurbSSTSolver(void) : CTurbSolver() {
