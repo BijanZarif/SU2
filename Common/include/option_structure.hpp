@@ -511,13 +511,15 @@ enum ENUM_UPWIND {
   AUSMPWPLUS = 8,             /*!< \brief AUSMPW+ numerical method. */
   CUSP = 9,                   /*!< \brief Convective upwind and split pressure numerical method. */
   CONVECTIVE_TEMPLATE = 10,   /*!< \brief Template for new numerical method . */
-  L2ROE = 11                  /*!< \brief L2ROE numerical method . */
+  L2ROE = 11,                  /*!< \brief L2ROE numerical method . */
+  AUSMPlus = 12               /*!< \brief AUSM+ numerical method. */
 };
 static const map<string, ENUM_UPWIND> Upwind_Map = CCreateMap<string, ENUM_UPWIND>
 ("NONE", NO_UPWIND)
 ("ROE", ROE)
 ("TURKEL_PREC", TURKEL)
 ("AUSM", AUSM)
+("AUSM+", AUSMPlus)
 ("AUSMPW+", AUSMPWPLUS)
 ("HLLC", HLLC)
 ("SW", SW)
