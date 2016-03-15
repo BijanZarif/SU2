@@ -263,7 +263,7 @@ void CCentJST_DUCROS_Flow::ComputeResidual(su2double *val_residual, su2double **
     
     /* --- Declare new local variables for the calculation of the Ducros Sensor ---*/
     su2double div_vel_i, div_vel_j, Vorticity_i[3] = {0.0,0.0,0.0}, Vorticity_j[3] = {0.0,0.0,0.0};
-    su2double Omega_i, Ducros_i, Omega_j, Ducros_j, Chi, Larsson_i, Larsson_j;
+    su2double Omega_i, Ducros_i, Omega_j, Ducros_j, Chi, Larsson_i, Larsson_j, ds;
     
     AD::StartPreacc();
     AD::SetPreaccIn(Normal, nDim);
@@ -312,20 +312,26 @@ void CCentJST_DUCROS_Flow::ComputeResidual(su2double *val_residual, su2double **
     
     /*---- Larsson Sensor 2016-03-12 ---*/
     
-    for (iDim = 0; iDim < nDim; iDim++) {
-        Area += Normal[iDim]*Normal[iDim];
-    }
-    Area = sqrt(Area);
-    Larsson_i = -div_vel_i/max(5.0*Omega_i, 0.05*SoundSpeed_i/Area);
-    Larsson_j = -div_vel_j/max(5.0*Omega_j, 0.05*SoundSpeed_j/Area);
+    ds = 0.0;
+    if (nDim == 1)
+        ds = Volume;
+    else if (nDim == 2)
+        ds = sqrt(Volume);
+    else if (nDim == 3)
+        ds = cbrt(Volume);
+    
+    Larsson_i = -div_vel_i/max(5.0*Omega_i, 0.05*SoundSpeed_i/ds);
+    Larsson_j = -div_vel_j/max(5.0*Omega_j, 0.05*SoundSpeed_j/ds);
    
     Chi = 0.5*(Larsson_i + Larsson_j);
     
+    //cout<< " " << Normal[0] << " " << Normal[1] << " "  << " " << ds << " " << Chi << endl;
+    
     /*--- End Larsson Sensor---*/
 
-    if (Chi >= 1.0)
+    if (Chi > 1.0)
         Chi = 1.0;
-    else if (Chi <= 0.2)
+    else if (Chi <= 1.0)
         Chi = 0.2;
 
     /*--- End Shock Sensors Implementation---*/

@@ -3513,7 +3513,8 @@ void CEulerSolver::Centered_Residual(CGeometry *geometry, CSolver **solver_conta
     
     /*--- 2016-01-26 - Need to Calculate Gradients for the Ducros Sensor ---*/
     if (config->GetKind_Centered_Flow() == JST_DUCROS){
-      numerics->SetPrimVarGradient(node[iPoint]->GetGradient_Primitive(), node[jPoint]->GetGradient_Primitive());}
+      numerics->SetPrimVarGradient(node[iPoint]->GetGradient_Primitive(), node[jPoint]->GetGradient_Primitive());
+        numerics->SetVolume(geometry->node[iPoint]->GetVolume());}
     
     /*--- Set the largest convective eigenvalue ---*/
     
