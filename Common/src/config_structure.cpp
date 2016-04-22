@@ -3303,7 +3303,14 @@ void CConfig::SetOutput(unsigned short val_software, unsigned short val_izone) {
           cout << "Second order integration." << endl;
         }
         if (Kind_Centered_Flow == JST_DUCROS) {
-          cout << "Jameson-Schmidt-Turkel scheme for the flow inviscid terms."<< endl;
+          cout << "Jameson-Schmidt-Turkel scheme using the Ducros Sensor for the flow inviscid terms."<< endl;
+          cout << "JST viscous coefficients (1st, 2nd): " << Kappa_1st_Flow
+          << ", " << Kappa_2nd_Flow << "."<< endl;
+          cout << "The method includes a grid stretching correction (p = 0.3)."<< endl;
+          cout << "Second order integration." << endl;
+          }
+        if (Kind_Centered_Flow == JST_MATD) {
+          cout << "Jameson-Schmidt-Turkel scheme using Matrix Dissipation for the flow inviscid terms."<< endl;
           cout << "JST viscous coefficients (1st, 2nd): " << Kappa_1st_Flow
           << ", " << Kappa_2nd_Flow << "."<< endl;
           cout << "The method includes a grid stretching correction (p = 0.3)."<< endl;

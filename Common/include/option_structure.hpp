@@ -485,13 +485,15 @@ enum ENUM_CENTERED {
   JST = 1,            /*!< \brief Jameson-Smith-Turkel centered numerical method. */
   LAX = 2,            /*!< \brief Lax-Friedrich centered numerical method. */
   JST_KE = 4,         /*!< \brief Kinetic Energy preserving Jameson-Smith-Turkel centered numerical method. */
-  JST_DUCROS = 5      /*!< \brief Jameson-Smith-Turkel centered numerical method with the Ducros Sensor. */
+  JST_DUCROS = 5,      /*!< \brief Jameson-Smith-Turkel centered numerical method with the Ducros Sensor. */
+  JST_MATD = 6      /*!< \brief Jameson-Smith-Turkel centered numerical method with the Ducros Sensor. */
 };
 static const map<string, ENUM_CENTERED> Centered_Map = CCreateMap<string, ENUM_CENTERED>
 ("NONE", NO_CENTERED)
 ("JST", JST)
 ("JST_KE", JST_KE)
 ("JST_DUCROS", JST_DUCROS)
+("JST_MATD", JST_MATD)
 ("LAX-FRIEDRICH", LAX);
 
 
@@ -511,15 +513,13 @@ enum ENUM_UPWIND {
   AUSMPWPLUS = 8,             /*!< \brief AUSMPW+ numerical method. */
   CUSP = 9,                   /*!< \brief Convective upwind and split pressure numerical method. */
   CONVECTIVE_TEMPLATE = 10,   /*!< \brief Template for new numerical method . */
-  L2ROE = 11,                  /*!< \brief L2ROE numerical method . */
-  AUSMPlus = 12               /*!< \brief AUSM+ numerical method. */
+  L2ROE = 11                  /*!< \brief L2ROE numerical method . */
 };
 static const map<string, ENUM_UPWIND> Upwind_Map = CCreateMap<string, ENUM_UPWIND>
 ("NONE", NO_UPWIND)
 ("ROE", ROE)
 ("TURKEL_PREC", TURKEL)
 ("AUSM", AUSM)
-("AUSM+", AUSMPlus)
 ("AUSMPW+", AUSMPWPLUS)
 ("HLLC", HLLC)
 ("SW", SW)
