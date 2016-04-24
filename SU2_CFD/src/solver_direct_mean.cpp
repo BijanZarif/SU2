@@ -3172,7 +3172,7 @@ void CEulerSolver::Preprocessing(CGeometry *geometry, CSolver **solver_container
   bool second_order     = ((config->GetSpatialOrder_Flow() == SECOND_ORDER) || (config->GetSpatialOrder_Flow() == SECOND_ORDER_LIMITER) || (adjoint && config->GetKind_ConvNumScheme_AdjFlow() == ROE));
   bool limiter          = ((config->GetSpatialOrder_Flow() == SECOND_ORDER_LIMITER) && (!low_fidelity) && (ExtIter <= config->GetLimiterIter()));
   bool center           = (config->GetKind_ConvNumScheme_Flow() == SPACE_CENTERED) || (adjoint && config->GetKind_ConvNumScheme_AdjFlow() == SPACE_CENTERED);
-  bool center_jst       = center && (config->GetKind_Centered_Flow() == JST);
+  bool center_jst       = center && ((config->GetKind_Centered_Flow() == JST) || (config->GetKind_Centered_Flow() == JST_DUCROS) || (config->GetKind_Centered_Flow() == JST_MATD));
   bool freesurface      = (config->GetKind_Regime() == FREESURFACE);
   bool engine           = ((config->GetnMarker_EngineInflow() != 0) || (config->GetnMarker_EngineBleed() != 0) || (config->GetnMarker_EngineExhaust() != 0));
   bool actuator_disk    = ((config->GetnMarker_ActDisk_Inlet() != 0) || (config->GetnMarker_ActDisk_Outlet() != 0));
@@ -3538,7 +3538,7 @@ void CEulerSolver::Centered_Residual(CGeometry *geometry, CSolver **solver_conta
   unsigned long iEdge, iPoint, jPoint;
   
   bool implicit = (config->GetKind_TimeIntScheme_Flow() == EULER_IMPLICIT);
-  bool second_order = ((config->GetKind_Centered_Flow() == JST) && (iMesh == MESH_0));
+  bool second_order = (((config->GetKind_Centered_Flow() == JST) || (config->GetKind_Centered_Flow() == JST_DUCROS) || config->GetKind_Centered_Flow() == JST_MATD) && (iMesh == MESH_0));
   bool low_fidelity = (config->GetLowFidelitySim() && (iMesh == MESH_1));
   bool grid_movement = config->GetGrid_Movement();
   
@@ -3553,6 +3553,11 @@ void CEulerSolver::Centered_Residual(CGeometry *geometry, CSolver **solver_conta
     /*--- Set primitive variables w/o reconstruction ---*/
     
     numerics->SetPrimitive(node[iPoint]->GetPrimitive(), node[jPoint]->GetPrimitive());
+    
+    /*--- 2016-01-26 - Need to Calculate Gradients for the Ducros Sensor ---*/
+    if (config->GetKind_Centered_Flow() == JST_DUCROS){
+      numerics->SetPrimVarGradient(node[iPoint]->GetGradient_Primitive(), node[jPoint]->GetGradient_Primitive());
+      numerics->SetVolume(geometry->node[iPoint]->GetVolume());}
     
     /*--- Set the largest convective eigenvalue ---*/
     
