@@ -3991,6 +3991,8 @@ public:
 
 };
 
+
+
 /*!
  * \class CFEM_LinearElasticity
  * \brief Class for computing the stiffness matrix of a linear, elastic problem.

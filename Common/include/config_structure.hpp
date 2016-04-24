@@ -706,6 +706,7 @@ private:
   bool ParMETIS;      /*!< \brief Boolean for activating ParMETIS mode (while testing). */
   unsigned short DirectDiff; /*!< \brief Direct Differentation mode. */
   bool DiscreteAdjoint; /*!< \brief AD-based discrete adjoint mode. */
+
   
     unsigned long Wrt_Surf_Freq_DualTime;	/*!< \brief Writing surface solution frequency for Dual Time. */
   double Const_DES;   /*!< \brief Detached Eddy Simulation Constant. */
@@ -5504,6 +5505,10 @@ public:
      */
     unsigned long GetWrt_Surf_Freq_DualTime(void);
 
+	/*!
+	 * \brief Get the interpolation method used for matching between zones.
+	 */
+	inline unsigned short GetKindInterpolation(void);
 
     /*!
      * \brief Get the Kind of Hybrid RANS/LES.
@@ -5516,11 +5521,6 @@ public:
      * \return Verbosity level for the console output.
      */
     double GetConst_DES(void);
-
-    /*!
-	 * \brief Get the interpolation method used for matching between zones.
-	 */
-	inline unsigned short GetKindInterpolation(void);
 
   /*!
    * \brief Get the AD support.
