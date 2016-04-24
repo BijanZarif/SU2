@@ -211,14 +211,10 @@ void CDriver::Solver_Preprocessing(CSolver ***solver_container, CGeometry **geom
   unsigned short iMGlevel;
   bool euler, ns, turbulent,
   adj_euler, adj_ns, adj_turb,
-<<<<<<< HEAD
-  poisson, wave, fea, heat,
-  spalart_allmaras, neg_spalart_allmaras, menter_sst, transition, e_spalart_allmaras, comp_spalart_allmaras,
-=======
   poisson, wave, heat, fem,
   spalart_allmaras, neg_spalart_allmaras, menter_sst, transition,
->>>>>>> su2code/master
   template_solver, disc_adj;
+  bool e_spalart_allmaras, comp_spalart_allmaras;
   
   /*--- Initialize some useful booleans ---*/
   
@@ -226,15 +222,11 @@ void CDriver::Solver_Preprocessing(CSolver ***solver_container, CGeometry **geom
   adj_euler        = false;  adj_ns          = false;  adj_turb  = false;
   spalart_allmaras = false;  menter_sst      = false;
   poisson          = false;  neg_spalart_allmaras = false;
-<<<<<<< HEAD
-  wave             = false;  disc_adj        = false;
-  fea              = false;  e_spalart_allmaras = false;
-  heat             = false;  comp_spalart_allmaras = false;
-=======
   wave             = false;	 disc_adj        = false;
   fem = false;
   heat             = false;
->>>>>>> su2code/master
+  e_spalart_allmaras = false; comp_spalart_allmaras = false;
+  
   transition       = false;
   template_solver  = false;
   
@@ -603,15 +595,10 @@ void CDriver::Numerics_Preprocessing(CNumerics ****numerics_container,
   /*--- Initialize some useful booleans ---*/
   euler            = false;   ns               = false;   turbulent        = false;
   poisson          = false;
-<<<<<<< HEAD
-  adj_euler        = false;   adj_ns           = false;  adj_turb         = false;
-  wave             = false;   heat             = false;   fea              = false;   spalart_allmaras = false; neg_spalart_allmaras = false;
-  menter_sst       = false; e_spalart_allmaras = false; comp_spalart_allmaras = false;
-=======
   adj_euler        = false;   adj_ns           = false;   adj_turb         = false;
   wave             = false;   heat             = false;   fem				= false;
   spalart_allmaras = false; neg_spalart_allmaras = false;	menter_sst       = false;
->>>>>>> su2code/master
+  e_spalart_allmaras = false; comp_spalart_allmaras = false;
   transition       = false;
   template_solver  = false;
   

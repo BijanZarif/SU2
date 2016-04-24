@@ -1204,12 +1204,10 @@ inline unsigned short CConfig::GetDirectDiff(){ return DirectDiff;}
 
 inline bool CConfig::GetDiscrete_Adjoint() {return DiscreteAdjoint;}
 
-<<<<<<< HEAD
 inline unsigned long CConfig::GetWrt_Surf_Freq_DualTime(void) { return Wrt_Surf_Freq_DualTime; }
 
 inline unsigned short CConfig::GetKind_HybridRANSLES(void) {return Kind_HybridRANSLES; }
 
 inline double CConfig::GetConst_DES(void) {return Const_DES; }
-=======
+
 inline bool CConfig::GetAD_Mode(void) {return AD_Mode;}
->>>>>>> su2code/master

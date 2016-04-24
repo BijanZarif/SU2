@@ -5504,7 +5504,7 @@ public:
      */
     unsigned long GetWrt_Surf_Freq_DualTime(void);
 
-<<<<<<< HEAD
+
     /*!
      * \brief Get the Kind of Hybrid RANS/LES.
      * \return Verbosity level for the console output.
@@ -5516,12 +5516,11 @@ public:
      * \return Verbosity level for the console output.
      */
     double GetConst_DES(void);
-=======
-	/*!
+
+    /*!
 	 * \brief Get the interpolation method used for matching between zones.
 	 */
 	inline unsigned short GetKindInterpolation(void);
->>>>>>> su2code/master
 
   /*!
    * \brief Get the AD support.
