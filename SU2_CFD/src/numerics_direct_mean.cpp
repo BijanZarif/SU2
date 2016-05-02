@@ -3319,36 +3319,36 @@ void CUpwL2Roe_Flow::ComputeResidual(su2double *val_residual, su2double **val_Ja
     /*--- Y. Wada and M.-S. Liou, A Flux Splitting Scheme With High-Resolution and Robustness for Discontinuities, AIAA-94-0083, NASA Technical Memorandum 106452, 1994.---*/
     /*--- M.-S. Liou, Mass Flux Schemes and Connection to Shock Instability, Journal of Computational Physics, 160 (2000), pp. 623-648. ---*/
     
-//    if ((ProjVelocity_i-RoeSoundSpeed > 0.0) && (ProjVelocity_j-RoeSoundSpeed < 0.0))
-//        ssw_L = 1;
-//    else if ((ProjVelocity_i+RoeSoundSpeed > 0.0) && (ProjVelocity_j+RoeSoundSpeed < 0.0))
-//        ssw_L = 1;
+    if ((ProjVelocity_i-RoeSoundSpeed > 0.0) && (ProjVelocity_j-RoeSoundSpeed < 0.0))
+        ssw_L = 1;
+    else if ((ProjVelocity_i+RoeSoundSpeed > 0.0) && (ProjVelocity_j+RoeSoundSpeed < 0.0))
+        ssw_L = 1;
+    else
+        ssw_L = 0;
+    
+    if ((ProjVelocity_j-RoeSoundSpeed > 0.0) && (ProjVelocity_i-RoeSoundSpeed < 0.0))
+        ssw_R = 1;
+    else if ((ProjVelocity_j+RoeSoundSpeed > 0.0) && (ProjVelocity_i+RoeSoundSpeed < 0.0))
+        ssw_R = 1;
+    else
+        ssw_R = 0;
+    
+    if ((ssw_L == 0) && (ssw_R == 0))
+        Lambda[0] = fabs(Lambda[0]);
+    else{
+        Lambda[0] = max(RoeSoundSpeed, fabs(sqrt(sq_vel)));
+        zeta = 1.0;}
+
+//    if (((ProjVelocity_i-RoeSoundSpeed > 0.0) && (ProjVelocity_j-RoeSoundSpeed < 0.0)) || ((ProjVelocity_i+RoeSoundSpeed > 0.0) && (ProjVelocity_j+RoeSoundSpeed < 0.0)))
+//        ssw_L = 1, ssw_R = 1;
 //    else
-//        ssw_L = 0;
-//    
-//    if ((ProjVelocity_j-RoeSoundSpeed > 0.0) && (ProjVelocity_i-RoeSoundSpeed < 0.0))
-//        ssw_R = 1;
-//    else if ((ProjVelocity_j+RoeSoundSpeed > 0.0) && (ProjVelocity_i+RoeSoundSpeed < 0.0))
-//        ssw_R = 1;
-//    else
-//        ssw_R = 0;
+//        ssw_L = 0, ssw_R = 0;
 //    
 //    if ((ssw_L == 0) && (ssw_R == 0))
 //        Lambda[0] = fabs(Lambda[0]);
 //    else{
 //        Lambda[0] = max(RoeSoundSpeed, fabs(sqrt(sq_vel)));
 //        zeta = 1.0;}
-
-        if (((ProjVelocity_i-RoeSoundSpeed > 0.0) && (ProjVelocity_j-RoeSoundSpeed < 0.0)) || ((ProjVelocity_i+RoeSoundSpeed > 0.0) && (ProjVelocity_j+RoeSoundSpeed < 0.0)))
-            ssw_L = 1, ssw_R = 1;
-        else
-            ssw_L = 0, ssw_R = 0;
-    
-        if ((ssw_L == 0) && (ssw_R == 0))
-            Lambda[0] = fabs(Lambda[0]);
-        else{
-            Lambda[0] = max(RoeSoundSpeed, fabs(sqrt(sq_vel)));
-            zeta = 1.0;}
     
     //
     // Or replace ProjVelocity_i by Velocity_i[0]*UnitNormal[0] and do the same thing Velocity_i[1]*UnitNormal[1]
@@ -3360,42 +3360,42 @@ void CUpwL2Roe_Flow::ComputeResidual(su2double *val_residual, su2double **val_Ja
     /*--- L2Roe: Scalling all velocities jumps when computing the wave amplitudes (zeta)----*/
     /*--- L2Roe: a low dissipation version of Roe's approximate Riemann solver for low Mach numbers. IJNMF 2015 ---*/
 
-    if (!implicit) {
-        
         /*--- Compute wave amplitudes (characteristics) ---*/
-        
-        proj_delta_vel = 0.0;
-        for (iDim = 0; iDim < nDim; iDim++) {
-            delta_vel[iDim] = (Velocity_j[iDim] - Velocity_i[iDim]) * zeta;
-            proj_delta_vel += delta_vel[iDim]*Normal[iDim];
-        }
-        delta_p = Pressure_j - Pressure_i;
-        delta_rho = Density_j - Density_i;
-        proj_delta_vel = proj_delta_vel/Area;
-        
-        if (nDim == 2) {
-            delta_wave[0] = delta_rho - delta_p/(RoeSoundSpeed*RoeSoundSpeed);
-            delta_wave[1] = UnitNormal[1]*delta_vel[0]-UnitNormal[0]*delta_vel[1];
-            delta_wave[2] = proj_delta_vel + delta_p/(RoeDensity*RoeSoundSpeed);
-            delta_wave[3] = -proj_delta_vel + delta_p/(RoeDensity*RoeSoundSpeed);
-        } else {
-            delta_wave[0] = delta_rho - delta_p/(RoeSoundSpeed*RoeSoundSpeed);
-            delta_wave[1] = UnitNormal[0]*delta_vel[2]-UnitNormal[2]*delta_vel[0];
-            delta_wave[2] = UnitNormal[1]*delta_vel[0]-UnitNormal[0]*delta_vel[1];
-            delta_wave[3] = proj_delta_vel + delta_p/(RoeDensity*RoeSoundSpeed);
-            delta_wave[4] = -proj_delta_vel + delta_p/(RoeDensity*RoeSoundSpeed);
-        }
-        
+    
+    proj_delta_vel = 0.0;
+    for (iDim = 0; iDim < nDim; iDim++) {
+        delta_vel[iDim] = Velocity_j[iDim] - Velocity_i[iDim];
+        proj_delta_vel += delta_vel[iDim]*Normal[iDim];
+    }
+    delta_p = Pressure_j - Pressure_i;
+    delta_rho = Density_j - Density_i;
+    proj_delta_vel = proj_delta_vel/Area;
+    
+    if (nDim == 2) {
+        delta_wave[0] = delta_rho - delta_p/(RoeSoundSpeed*RoeSoundSpeed);
+        delta_wave[1] = (UnitNormal[1]*delta_vel[0]-UnitNormal[0]*delta_vel[1])*zeta;
+        delta_wave[2] = proj_delta_vel*zeta + delta_p/(RoeDensity*RoeSoundSpeed);
+        delta_wave[3] = -proj_delta_vel*zeta + delta_p/(RoeDensity*RoeSoundSpeed);
+    } else {
+        delta_wave[0] = delta_rho - delta_p/(RoeSoundSpeed*RoeSoundSpeed);
+        delta_wave[1] = (UnitNormal[0]*delta_vel[2]-UnitNormal[2]*delta_vel[0])*zeta;
+        delta_wave[2] = (UnitNormal[1]*delta_vel[0]-UnitNormal[0]*delta_vel[1])*zeta;
+        delta_wave[3] = proj_delta_vel*zeta + delta_p/(RoeDensity*RoeSoundSpeed);
+        delta_wave[4] = -proj_delta_vel*zeta + delta_p/(RoeDensity*RoeSoundSpeed);
+    }
+
+    if (!implicit) {
+
         /*--- Roe's Flux approximation ---*/
-        
+
         for (iVar = 0; iVar < nVar; iVar++) {
             val_residual[iVar] = 0.5*(ProjFlux_i[iVar]+ProjFlux_j[iVar]);
             for (jVar = 0; jVar < nVar; jVar++)
                 val_residual[iVar] -= 0.5*Lambda[jVar]*delta_wave[jVar]*P_Tensor[iVar][jVar]*Area;
         }
-        
+
         /*--- Flux contribution due to grid motion ---*/
-        
+
         if (grid_movement) {
             ProjVelocity = 0.0;
             for (iDim = 0; iDim < nDim; iDim++)
@@ -3405,68 +3405,173 @@ void CUpwL2Roe_Flow::ComputeResidual(su2double *val_residual, su2double **val_Ja
             }
         }
     }
-    
+
     else {
-        
+
         /*--- Compute inverse P ---*/
-        
+
         GetPMatrix_inv(&RoeDensity, RoeVelocity, &RoeSoundSpeed, UnitNormal, invP_Tensor);
-        
+
         /*--- Jacobians of the inviscid flux, scaled by
          kappa because val_resconv ~ kappa*(fc_i+fc_j)*Normal ---*/
-        
+
         GetInviscidProjJac(Velocity_i, &Energy_i, Normal, kappa, val_Jacobian_i);
         GetInviscidProjJac(Velocity_j, &Energy_j, Normal, kappa, val_Jacobian_j);
-        
+
         /*--- Diference variables iPoint and jPoint ---*/
-        
+
         for (iVar = 0; iVar < nVar; iVar++)
             Diff_U[iVar] = U_j[iVar]-U_i[iVar];
 
-        /*--- L2Roe: Scalling all velocities jumps when computing the wave amplitudes (zeta) - Implicit part - 2016-01-25----*/
-        /*--- L2Roe: a low dissipation version of Roe's approximate Riemann solver for low Mach numbers. IJNMF 2015 ---*/
-        
-        for (iDim = 0; iDim < nDim; iDim++)
-            Diff_U[iDim+1] = Diff_U[iDim+1] * zeta;
-        
         /*--- Roe's Flux approximation ---*/
-        
+
         for (iVar = 0; iVar < nVar; iVar++) {
-            
+
             val_residual[iVar] = kappa*(ProjFlux_i[iVar]+ProjFlux_j[iVar]);
             for (jVar = 0; jVar < nVar; jVar++) {
                 Proj_ModJac_Tensor_ij = 0.0;
-                
+
                 /*--- Compute |Proj_ModJac_Tensor| = P x |Lambda| x inverse P ---*/
-                
+
                 for (kVar = 0; kVar < nVar; kVar++)
                     Proj_ModJac_Tensor_ij += P_Tensor[iVar][kVar]*Lambda[kVar]*invP_Tensor[kVar][jVar];
-                
-                val_residual[iVar] -= (1.0-kappa)*Proj_ModJac_Tensor_ij*Diff_U[jVar]*Area;
+
+                //val_residual[iVar] -= (1.0-kappa)*Proj_ModJac_Tensor_ij*Diff_U[jVar]*Area;
+                val_residual[iVar] -= 0.5*Lambda[jVar]*delta_wave[jVar]*P_Tensor[iVar][jVar]*Area;
                 val_Jacobian_i[iVar][jVar] += (1.0-kappa)*Proj_ModJac_Tensor_ij*Area;
                 val_Jacobian_j[iVar][jVar] -= (1.0-kappa)*Proj_ModJac_Tensor_ij*Area;
-                
+
             }
-            
+
         }
-        
+
         /*--- Jacobian contributions due to grid motion ---*/
-        
+
         if (grid_movement) {
             ProjVelocity = 0.0;
             for (iDim = 0; iDim < nDim; iDim++)
                 ProjVelocity += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*Normal[iDim];
             for (iVar = 0; iVar < nVar; iVar++) {
                 val_residual[iVar] -= ProjVelocity * 0.5*(U_i[iVar]+U_j[iVar]);
-                
+
                 /*--- Implicit terms ---*/
-                
+
                 val_Jacobian_i[iVar][iVar] -= 0.5*ProjVelocity;
                 val_Jacobian_j[iVar][iVar] -= 0.5*ProjVelocity;
             }
         }
-        
+
     }
+
+    
+    
+//    if (!implicit) {
+//        
+//        /*--- Compute wave amplitudes (characteristics) ---*/
+//        
+//        proj_delta_vel = 0.0;
+//        for (iDim = 0; iDim < nDim; iDim++) {
+//            delta_vel[iDim] = (Velocity_j[iDim] - Velocity_i[iDim]) * zeta;
+//            proj_delta_vel += delta_vel[iDim]*Normal[iDim];
+//        }
+//        delta_p = Pressure_j - Pressure_i;
+//        delta_rho = Density_j - Density_i;
+//        proj_delta_vel = proj_delta_vel/Area;
+//        
+//        if (nDim == 2) {
+//            delta_wave[0] = delta_rho - delta_p/(RoeSoundSpeed*RoeSoundSpeed);
+//            delta_wave[1] = UnitNormal[1]*delta_vel[0]-UnitNormal[0]*delta_vel[1];
+//            delta_wave[2] = proj_delta_vel + delta_p/(RoeDensity*RoeSoundSpeed);
+//            delta_wave[3] = -proj_delta_vel + delta_p/(RoeDensity*RoeSoundSpeed);
+//        } else {
+//            delta_wave[0] = delta_rho - delta_p/(RoeSoundSpeed*RoeSoundSpeed);
+//            delta_wave[1] = UnitNormal[0]*delta_vel[2]-UnitNormal[2]*delta_vel[0];
+//            delta_wave[2] = UnitNormal[1]*delta_vel[0]-UnitNormal[0]*delta_vel[1];
+//            delta_wave[3] = proj_delta_vel + delta_p/(RoeDensity*RoeSoundSpeed);
+//            delta_wave[4] = -proj_delta_vel + delta_p/(RoeDensity*RoeSoundSpeed);
+//        }
+//        
+//        /*--- Roe's Flux approximation ---*/
+//        
+//        for (iVar = 0; iVar < nVar; iVar++) {
+//            val_residual[iVar] = 0.5*(ProjFlux_i[iVar]+ProjFlux_j[iVar]);
+//            for (jVar = 0; jVar < nVar; jVar++)
+//                val_residual[iVar] -= 0.5*Lambda[jVar]*delta_wave[jVar]*P_Tensor[iVar][jVar]*Area;
+//        }
+//        
+//        /*--- Flux contribution due to grid motion ---*/
+//        
+//        if (grid_movement) {
+//            ProjVelocity = 0.0;
+//            for (iDim = 0; iDim < nDim; iDim++)
+//                ProjVelocity += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*Normal[iDim];
+//            for (iVar = 0; iVar < nVar; iVar++) {
+//                val_residual[iVar] -= ProjVelocity * 0.5*(U_i[iVar]+U_j[iVar]);
+//            }
+//        }
+//    }
+//    
+//    else {
+//        
+//        /*--- Compute inverse P ---*/
+//        
+//        GetPMatrix_inv(&RoeDensity, RoeVelocity, &RoeSoundSpeed, UnitNormal, invP_Tensor);
+//        
+//        /*--- Jacobians of the inviscid flux, scaled by
+//         kappa because val_resconv ~ kappa*(fc_i+fc_j)*Normal ---*/
+//        
+//        GetInviscidProjJac(Velocity_i, &Energy_i, Normal, kappa, val_Jacobian_i);
+//        GetInviscidProjJac(Velocity_j, &Energy_j, Normal, kappa, val_Jacobian_j);
+//        
+//        /*--- Diference variables iPoint and jPoint ---*/
+//        
+//        for (iVar = 0; iVar < nVar; iVar++)
+//            Diff_U[iVar] = U_j[iVar]-U_i[iVar];
+//
+//        /*--- L2Roe: Scalling all velocities jumps when computing the wave amplitudes (zeta) - Implicit part - 2016-01-25----*/
+//        /*--- L2Roe: a low dissipation version of Roe's approximate Riemann solver for low Mach numbers. IJNMF 2015 ---*/
+//        
+//        for (iDim = 0; iDim < nDim; iDim++)
+//            Diff_U[iDim+1] = Diff_U[iDim+1] * zeta;
+//        
+//        /*--- Roe's Flux approximation ---*/
+//        
+//        for (iVar = 0; iVar < nVar; iVar++) {
+//            
+//            val_residual[iVar] = kappa*(ProjFlux_i[iVar]+ProjFlux_j[iVar]);
+//            for (jVar = 0; jVar < nVar; jVar++) {
+//                Proj_ModJac_Tensor_ij = 0.0;
+//                
+//                /*--- Compute |Proj_ModJac_Tensor| = P x |Lambda| x inverse P ---*/
+//                
+//                for (kVar = 0; kVar < nVar; kVar++)
+//                    Proj_ModJac_Tensor_ij += P_Tensor[iVar][kVar]*Lambda[kVar]*invP_Tensor[kVar][jVar];
+//                
+//                val_residual[iVar] -= (1.0-kappa)*Proj_ModJac_Tensor_ij*Diff_U[jVar]*Area;
+//                val_Jacobian_i[iVar][jVar] += (1.0-kappa)*Proj_ModJac_Tensor_ij*Area;
+//                val_Jacobian_j[iVar][jVar] -= (1.0-kappa)*Proj_ModJac_Tensor_ij*Area;
+//                
+//            }
+//            
+//        }
+//        
+//        /*--- Jacobian contributions due to grid motion ---*/
+//        
+//        if (grid_movement) {
+//            ProjVelocity = 0.0;
+//            for (iDim = 0; iDim < nDim; iDim++)
+//                ProjVelocity += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*Normal[iDim];
+//            for (iVar = 0; iVar < nVar; iVar++) {
+//                val_residual[iVar] -= ProjVelocity * 0.5*(U_i[iVar]+U_j[iVar]);
+//                
+//                /*--- Implicit terms ---*/
+//                
+//                val_Jacobian_i[iVar][iVar] -= 0.5*ProjVelocity;
+//                val_Jacobian_j[iVar][iVar] -= 0.5*ProjVelocity;
+//            }
+//        }
+//        
+//    }
     
     AD::SetPreaccOut(val_residual, nVar);
     AD::EndPreacc();
