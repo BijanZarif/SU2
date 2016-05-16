@@ -674,6 +674,22 @@ void CTurbSolver::ImplicitEuler_Iteration(CGeometry *geometry, CSolver **solver_
         }
         
         break;
+    
+      case SA_E:
+            
+        for (iPoint = 0; iPoint < nPointDomain; iPoint++) {
+            node[iPoint]->AddClippedSolution(0, config->GetRelaxation_Factor_Turb()*LinSysSol[iPoint], lowerlimit[0], upperlimit[0]);
+        }
+            
+        break;
+            
+      case SA_COMP:
+            
+        for (iPoint = 0; iPoint < nPointDomain; iPoint++) {
+            node[iPoint]->AddClippedSolution(0, config->GetRelaxation_Factor_Turb()*LinSysSol[iPoint], lowerlimit[0], upperlimit[0]);
+        }
+            
+        break;
         
       case SA_NEG:
         

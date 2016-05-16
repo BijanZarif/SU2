@@ -350,6 +350,7 @@ void CDriver::Solver_Postprocessing(CSolver ***solver_container, CGeometry **geo
   poisson, wave, heat, fem,
   spalart_allmaras, neg_spalart_allmaras, menter_sst, transition,
   template_solver, disc_adj;
+  bool e_spalart_allmaras, comp_spalart_allmaras;
 
   /*--- Initialize some useful booleans ---*/
 
@@ -362,6 +363,7 @@ void CDriver::Solver_Postprocessing(CSolver ***solver_container, CGeometry **geo
   heat             = false;
   transition       = false;
   template_solver  = false;
+  e_spalart_allmaras = false; comp_spalart_allmaras = false;
 
   /*--- Assign booleans ---*/
 
@@ -388,6 +390,8 @@ void CDriver::Solver_Postprocessing(CSolver ***solver_container, CGeometry **geo
     switch (config->GetKind_Turb_Model()) {
     case SA:     spalart_allmaras = true;     break;
     case SA_NEG: neg_spalart_allmaras = true; break;
+    case SA_E: e_spalart_allmaras = true; break;
+    case SA_COMP: comp_spalart_allmaras = true; break;
     case SST:    menter_sst = true;           break;
     }
 
@@ -414,7 +418,7 @@ and potential are incompatible, they use the same position in sol container ---*
     }
 
     if (turbulent) {
-      if (spalart_allmaras || neg_spalart_allmaras || menter_sst ) {
+      if (spalart_allmaras || neg_spalart_allmaras || menter_sst || e_spalart_allmaras || comp_spalart_allmaras) {
         delete solver_container[iMGlevel][TURB_SOL];
       }
       if (transition) {
@@ -1332,6 +1336,7 @@ void CDriver::Numerics_Postprocessing(CNumerics ****numerics_container,
   heat,
   transition,
   template_solver;
+  bool e_spalart_allmaras, comp_spalart_allmaras;
 
   bool compressible = (config->GetKind_Regime() == COMPRESSIBLE);
   bool incompressible = (config->GetKind_Regime() == INCOMPRESSIBLE);
@@ -1345,6 +1350,7 @@ void CDriver::Numerics_Postprocessing(CNumerics ****numerics_container,
   spalart_allmaras = false; neg_spalart_allmaras = false; menter_sst       = false;
   transition       = false;
   template_solver  = false;
+  e_spalart_allmaras = false; comp_spalart_allmaras = false;
 
   /*--- Assign booleans ---*/
   switch (config->GetKind_Solver()) {
@@ -1367,6 +1373,8 @@ void CDriver::Numerics_Postprocessing(CNumerics ****numerics_container,
     switch (config->GetKind_Turb_Model()) {
       case SA:     spalart_allmaras = true;     break;
       case SA_NEG: neg_spalart_allmaras = true; break;
+      case SA_COMP: comp_spalart_allmaras = true; break;
+      case SA_E: e_spalart_allmaras = true; break;
       case SST:    menter_sst = true;  break;
 
     }
@@ -1491,14 +1499,14 @@ void CDriver::Numerics_Postprocessing(CNumerics ****numerics_container,
     switch (config->GetKind_ConvNumScheme_Turb()) {
       case SPACE_UPWIND :
         for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++) {
-          if (spalart_allmaras || neg_spalart_allmaras ||menter_sst)
+          if (spalart_allmaras || neg_spalart_allmaras ||menter_sst|| comp_spalart_allmaras || e_spalart_allmaras)
             delete numerics_container[iMGlevel][TURB_SOL][CONV_TERM];
         }
         break;
     }
 
     /*--- Definition of the viscous scheme for each equation and mesh level ---*/
-    if (spalart_allmaras || neg_spalart_allmaras || menter_sst){
+    if (spalart_allmaras || neg_spalart_allmaras || menter_sst || comp_spalart_allmaras || e_spalart_allmaras){
       for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++) {
           delete numerics_container[iMGlevel][TURB_SOL][VISC_TERM];
           delete numerics_container[iMGlevel][TURB_SOL][SOURCE_FIRST_TERM];
