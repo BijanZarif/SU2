@@ -3811,10 +3811,10 @@ void CEulerSolver::Upwind_Residual(CGeometry *geometry, CSolver **solver_contain
 //
           Coord_i = geometry->node[iPoint]->GetCoord();
           Coord_j = geometry->node[jPoint]->GetCoord();
-          deltax = Coord_j[0] - Coord_i[0];
-          deltay = Coord_j[1] - Coord_i[1];
+          deltax = abs(Coord_j[0] - Coord_i[0]);
+          deltay = abs(Coord_j[1] - Coord_i[1]);
           if (nDim == 3)
-              deltaz = Coord_j[2] - Coord_i[2];
+              deltaz = abs(Coord_j[2] - Coord_i[2]);
 
           aux = max(deltax,deltay); delta = max(aux,deltaz);
 ////
@@ -3834,7 +3834,7 @@ void CEulerSolver::Upwind_Residual(CGeometry *geometry, CSolver **solver_contain
           Mean_StrainMag_2 = pow(Mean_StrainMag, 2.0);
           
           Baux = (ch3 * Mean_Omega * max(Mean_StrainMag, Mean_Omega)) / max((Mean_StrainMag_2+Mean_Omega_2)/2.0,1E-20);
-          Gaux = tanh(pow(Baux,4.0));
+          Gaux = max(tanh(pow(Baux,4.0)),1E-20);
           Lnond = (config->GetLength_Reynolds()/config->GetDelta_UnstTime())/config->GetModVel_FreeStream();
           inv_TimeScale = 1.0 / (Lnond / config->GetModVel_FreeStream());
           Kaux = max(pow((Mean_Omega_2 + Mean_StrainMag_2)/2.0,0.5), 0.1 * inv_TimeScale);
@@ -3842,6 +3842,10 @@ void CEulerSolver::Upwind_Residual(CGeometry *geometry, CSolver **solver_contain
           Aaux = ch2 * max((Const_DES*delta/Lturb/Gaux) - 0.5, 0.0);
           phi_hybrid = phi_max * tanh(pow(Aaux,ch1));
 
+          //cout << Coord_i[0] << " " << Coord_i[1] << " " << Coord_i[2] << endl;
+          //cout << Coord_j[0] << " " << Coord_j[1] << " " << Coord_j[2] << endl;
+          
+          //cout << Aaux << " " << Const_DES*delta/Lturb/Gaux << " "  << Lturb << " " << Kaux << " " << Baux << endl;
           /*--- Ducros Sensor 2016-01-26 ---*/
           /*--- Ducros et al. Large-Eddy Simulation of the Shock Turbulence Interaction 1999 ---*/
           
@@ -3858,6 +3862,8 @@ void CEulerSolver::Upwind_Residual(CGeometry *geometry, CSolver **solver_contain
           Chi = 0.5 * (Ducros_i + Ducros_j);
           
           phi_eff = Chi + phi_hybrid - (phi_hybrid * Chi);
+          
+          //cout << Chi << " " << phi_hybrid << " " <<  phi_eff << endl;
           
           numerics->SetPhiEff(phi_eff);
     }
