@@ -204,6 +204,8 @@ public:
   *WindGustDer_j;			/*!< \brief Wind gust derivatives at point j. */
   su2double *Vorticity_i, *Vorticity_j;  /*!< \brief Vorticity. */
   su2double StrainMag_i, StrainMag_j;   /*!< \brief Strain rate magnitude. */
+    
+  su2double phi_eff;
   
   su2double *l, *m;
   su2double *dPdU_i, *dPdU_j;
@@ -1490,6 +1492,19 @@ public:
    * \param[in] config - Normal vector
    */
   void CreateBasis(su2double *val_Normal);
+    
+  /*!
+   * \brief Set the value of the Hybrid Blending Function.
+   * \param[in] val_v_i - Value of the primitive variable at point i.
+   * \param[in] val_v_j - Value of the primitive variable at point j.
+   */
+   void SetPhiEff(double val_phi_eff);
+    
+  /* \brief Set the value of the Hybrid Blending Function.
+   * \param[in] val_v_i - Value of the primitive variable at point i.
+   * \param[in] val_v_j - Value of the primitive variable at point j.
+   */
+   double GetPhiEff(double val_phi_eff);
   
 };
 
@@ -1590,11 +1605,11 @@ public:
 };
 
 /*!
- * \class CUpwL2Roe_Flow
+ * \class CUpwRoe_Flow
  * \brief Class for solving an approximate Riemann solver of L2Roe for the flow equations.
  * \ingroup ConvDiscr
  * \author E. Molina, A. Bueno, F. Palacios
- * \version 4.1.0 "Cardinal"
+ * \version 4.1.2 "Cardinal"
  */
 class CUpwL2Roe_Flow : public CNumerics {
 private:
@@ -1624,6 +1639,53 @@ public:
      * \brief Destructor of the class.
      */
     ~CUpwL2Roe_Flow(void);
+    
+    /*!
+     * \brief Compute the Roe's flux between two nodes i and j.
+     * \param[out] val_residual - Pointer to the total residual.
+     * \param[out] val_Jacobian_i - Jacobian of the numerical method at node i (implicit computation).
+     * \param[out] val_Jacobian_j - Jacobian of the numerical method at node j (implicit computation).
+     * \param[in] config - Definition of the particular problem.
+     */
+    void ComputeResidual(su2double *val_residual, su2double **val_Jacobian_i, su2double **val_Jacobian_j, CConfig *config);
+};
+
+
+/*!
+ * \class CUpwRoeHyrbid_Flow
+ * \brief Class for solving an approximate Riemann solver of RoeHybrid for the flow equations.
+ * \ingroup ConvDiscr
+ * \author E. Molina, A. Bueno, F. Palacios
+ * \version 4.1.0 "Cardinal"
+ */
+class CUpwRoeHybrid_Flow : public CNumerics {
+private:
+    bool implicit, grid_movement;
+    su2double *Diff_U;
+    su2double *Velocity_i, *Velocity_j, *RoeVelocity;
+    su2double *ProjFlux_i, *ProjFlux_j;
+    su2double *delta_wave, *delta_vel;
+    su2double *Lambda, *Epsilon, MaxLambda, Delta;
+    su2double **P_Tensor, **invP_Tensor;
+    su2double sq_vel, Proj_ModJac_Tensor_ij, Density_i, Energy_i, SoundSpeed_i, Pressure_i, Enthalpy_i,
+    Density_j, Energy_j, SoundSpeed_j, Pressure_j, Enthalpy_j, R, RoeDensity, RoeEnthalpy, RoeSoundSpeed,
+    ProjVelocity, ProjVelocity_i, ProjVelocity_j, proj_delta_vel, delta_p, delta_rho, RoeSoundSpeed2, kappa;
+    unsigned short iDim, iVar, jVar, kVar;
+    
+public:
+    
+    /*!
+     * \brief Constructor of the class.
+     * \param[in] val_nDim - Number of dimensions of the problem.
+     * \param[in] val_nVar - Number of variables of the problem.
+     * \param[in] config - Definition of the particular problem.
+     */
+    CUpwRoeHybrid_Flow(unsigned short val_nDim, unsigned short val_nVar, CConfig *config);
+    
+    /*!
+     * \brief Destructor of the class.
+     */
+    ~CUpwRoeHybrid_Flow(void);
     
     /*!
      * \brief Compute the Roe's flux between two nodes i and j.

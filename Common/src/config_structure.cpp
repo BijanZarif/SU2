@@ -3458,6 +3458,7 @@ void CConfig::SetOutput(unsigned short val_software, unsigned short val_izone) {
 				if (Kind_Upwind_Flow == MSW)	cout << "Modified Steger-Warming solver for the flow inviscid terms."<< endl;
         if (Kind_Upwind_Flow == CUSP)	cout << "CUSP solver for the flow inviscid terms."<< endl;
                 if (Kind_Upwind_Flow == L2ROE) cout << "L2ROE solver for the flow inviscid terms."<< endl;
+                if (Kind_Upwind_Flow == ROEHYBRID) cout << "Roe Hybrid solver for the flow inviscid terms."<< endl;
         switch (SpatialOrder_Flow) {
           case FIRST_ORDER: cout << "First order integration." << endl; break;
           case SECOND_ORDER: cout << "Second order integration." << endl; break;

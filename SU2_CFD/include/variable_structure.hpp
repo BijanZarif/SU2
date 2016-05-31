@@ -2088,6 +2088,12 @@ public:
   virtual su2double GetDual_Time_Derivative(unsigned short iVar);
 
   virtual su2double GetDual_Time_Derivative_n(unsigned short iVar);
+    
+  virtual void SetMeanU(su2double* val_MeanU);
+    
+  virtual su2double* GetMeanU();
+    
+    
 };
 
 /*!
@@ -2719,6 +2725,9 @@ protected:
 	su2double *Secondary;	/*!< \brief Primitive variables (T, vx, vy, vz, P, rho, h, c) in compressible flows. */
 	su2double **Gradient_Secondary;	/*!< \brief Gradient of the primitive variables (T, vx, vy, vz, P, rho). */
   su2double *Limiter_Secondary;    /*!< \brief Limiter of the primitive variables (T, vx, vy, vz, P, rho). */
+    
+   /*--- Mean Flow definition ----*/
+    su2double *MeanU;
 
 public:
 
@@ -3175,6 +3184,11 @@ public:
 	 * \param[in] Value of the derivatives of the wind gust
 	 */
 	void SetWindGustDer(su2double* val_WindGust);
+    
+    su2double* GetMeanU();
+    
+    void SetMeanU(su2double* val_MeanU);
+    
 };
 
 /*! 

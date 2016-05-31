@@ -171,6 +171,10 @@ inline void CVariable::SetPreconditioner_Beta( su2double val_Beta) { }
 
 inline su2double* CVariable::GetWindGust() { return 0; }
 
+inline su2double* CVariable::GetMeanU() {return 0;}
+
+inline void CVariable::SetMeanU(su2double* val_MeanU){}
+
 inline void CVariable::SetWindGust( su2double* val_WindGust) {}
 
 inline su2double* CVariable::GetWindGustDer() { return 0; }
@@ -745,6 +749,12 @@ inline su2double CEulerVariable::GetTimeSpectral_Source(unsigned short val_var) 
 inline su2double CEulerVariable::GetPreconditioner_Beta() { return Precond_Beta; }
 
 inline void CEulerVariable::SetPreconditioner_Beta(su2double val_Beta) { Precond_Beta = val_Beta; }
+
+inline void CEulerVariable::SetMeanU(su2double* val_MeanU){
+    for (unsigned short iDim = 0; iDim < nDim; iDim++)
+        MeanU[iDim] = val_MeanU[iDim];}
+
+inline su2double* CEulerVariable::GetMeanU() {return MeanU;}
 
 inline void CEulerVariable::SetWindGust( su2double* val_WindGust) {
   for (unsigned short iDim = 0; iDim < nDim; iDim++)

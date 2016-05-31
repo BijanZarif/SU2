@@ -145,7 +145,9 @@ inline void CNumerics::SetdPdU(su2double *val_dPdU_i, su2double *val_dPdU_j) { d
 inline void CNumerics::SetdTdU(su2double *val_dTdU_i, su2double *val_dTdU_j) { dTdU_i = val_dTdU_i; dTdU_j = val_dTdU_j; }
 
 inline void CNumerics::SetdTvedU(su2double *val_dTvedU_i, su2double *val_dTvedU_j) { dTvedU_i = val_dTvedU_i; dTvedU_j = val_dTvedU_j; }
-	
+
+inline void CNumerics::SetPhiEff(double val_phi_eff) { phi_eff = val_phi_eff;}
+
 inline void CNumerics::SetUndivided_Laplacian(su2double *val_und_lapl_i, su2double *val_und_lapl_j) {
 	Und_Lapl_i = val_und_lapl_i; 
 	Und_Lapl_j = val_und_lapl_j; 

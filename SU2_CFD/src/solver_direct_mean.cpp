@@ -3616,6 +3616,8 @@ void CEulerSolver::Upwind_Residual(CGeometry *geometry, CSolver **solver_contain
   bool roe_turkel       = (config->GetKind_Upwind_Flow() == TURKEL);
   bool ideal_gas        = (config->GetKind_FluidModel() == STANDARD_AIR || config->GetKind_FluidModel() == IDEAL_GAS );
   bool low_mach_corr    = config->Low_Mach_Correction();
+  bool roe_hybrid        = (config->GetKind_Upwind_Flow() == ROEHYBRID);
+    su2double phi_eff;
 
   /*--- Loop over all the edges ---*/
   
@@ -3794,6 +3796,70 @@ void CEulerSolver::Upwind_Residual(CGeometry *geometry, CSolver **solver_contain
         numerics->SetPrimitive(Primitive_i, Primitive_j);
       }
       
+    }
+    
+      /*--- Set conservative  ---*/
+      
+      if (roe_hybrid){
+          su2double delta, aux, Mean_Density, Mean_Laminar_Viscosity, Mean_Eddy_Viscosity;
+          su2double Mean_StrainMag, *Vorticity_i, *Vorticity_j, Mean_Omega, Mean_StrainMag_2, Mean_Omega_2;
+          su2double ch3=2.0, Baux, Gaux, Lnond,inv_TimeScale;
+          su2double Const_DES = 0.65, cnu=0.09, Lturb, Kaux, Aaux, phi_hybrid, phi_max=1.0, ch1=3.0, ch2=1.0;
+          su2double deltax = 0.0, deltay=0.0, deltaz=0.0;
+          su2double *Coord_i, *Coord_j;
+          su2double div_vel_i, div_vel_j, Omega_i, Omega_j, Ducros_i, Ducros_j, Chi;
+//
+          Coord_i = geometry->node[iPoint]->GetCoord();
+          Coord_j = geometry->node[jPoint]->GetCoord();
+          deltax = Coord_j[0] - Coord_i[0];
+          deltay = Coord_j[1] - Coord_i[1];
+          if (nDim == 3)
+              deltaz = Coord_j[2] - Coord_i[2];
+
+          aux = max(deltax,deltay); delta = max(aux,deltaz);
+////
+          Mean_Density = 0.5*(V_i[nDim+2] + V_j[nDim+2]);
+          Mean_Laminar_Viscosity = 0.5*(V_i[nDim+5] + V_j[nDim+5]) /Mean_Density;
+          Mean_Eddy_Viscosity = 0.5*(V_i[nDim+6]+V_j[nDim+6])/Mean_Density;
+          Mean_StrainMag = 0.5*(node[iPoint]->GetStrainMag() + node[jPoint]->GetStrainMag());
+          Vorticity_i = node[iPoint]->GetVorticity();
+          Vorticity_j = node[jPoint]->GetVorticity();
+          
+          Omega_i = sqrt(Vorticity_i[0]*Vorticity_i[0]+ Vorticity_i[1]*Vorticity_i[1]+ Vorticity_i[2]*Vorticity_i[2]);
+          Omega_j = sqrt(Vorticity_j[0]*Vorticity_j[0]+ Vorticity_j[1]*Vorticity_j[1]+ Vorticity_j[2]*Vorticity_j[2]);
+          
+          Mean_Omega = 0.5 * ( Omega_i + Omega_j );
+         
+          Mean_Omega_2     = pow(Mean_Omega, 2.0);
+          Mean_StrainMag_2 = pow(Mean_StrainMag, 2.0);
+          
+          Baux = (ch3 * Mean_Omega * max(Mean_StrainMag, Mean_Omega)) / max((Mean_StrainMag_2+Mean_Omega_2)/2.0,1E-20);
+          Gaux = tanh(pow(Baux,4.0));
+          Lnond = (config->GetLength_Reynolds()/config->GetDelta_UnstTime())/config->GetModVel_FreeStream();
+          inv_TimeScale = 1.0 / (Lnond / config->GetModVel_FreeStream());
+          Kaux = max(pow((Mean_Omega_2 + Mean_StrainMag_2)/2.0,0.5), 0.1 * inv_TimeScale);
+          Lturb = (Mean_Laminar_Viscosity + Mean_Eddy_Viscosity)/pow(pow(cnu,1.5)*Kaux,0.5);
+          Aaux = ch2 * max((Const_DES*delta/Lturb/Gaux) - 0.5, 0.0);
+          phi_hybrid = phi_max * tanh(pow(Aaux,ch1));
+
+          /*--- Ducros Sensor 2016-01-26 ---*/
+          /*--- Ducros et al. Large-Eddy Simulation of the Shock Turbulence Interaction 1999 ---*/
+          
+          /*--- Divergence of the velocity ---*/
+          
+          div_vel_i = 0.0; for (iDim = 0 ; iDim < nDim; iDim++) div_vel_i += Gradient_i[iDim+1][iDim];
+          div_vel_j = 0.0; for (iDim = 0 ; iDim < nDim; iDim++) div_vel_j += Gradient_j[iDim+1][iDim];
+          
+          /*---- Ducros sensor for iPoint and jPoint ---*/
+          
+          Ducros_i = pow(div_vel_i,2.0)/(pow(div_vel_i,2.0) + pow(Omega_i,2.0) + 1e-20);
+          Ducros_j = pow(div_vel_j,2.0)/(pow(div_vel_j,2.0) + pow(Omega_j,2.0) + 1e-20);
+          
+          Chi = 0.5 * (Ducros_i + Ducros_j);
+          
+          phi_eff = Chi + phi_hybrid - (phi_hybrid * Chi);
+          
+          numerics->SetPhiEff(phi_eff);
     }
     
     /*--- Compute the residual ---*/
@@ -6963,6 +7029,8 @@ void CEulerSolver::BC_Far_Field(CGeometry *geometry, CSolver **solver_container,
                     && (config->GetKind_Turb_Model() == SST));
   
   su2double *Normal = new su2double[nDim];
+  su2double phi_eff = 1.0;
+  bool roe_hybrid = (config->GetKind_Upwind_Flow() == ROEHYBRID);
   
   /*--- Loop over all the vertices on this boundary marker ---*/
   
@@ -7160,8 +7228,12 @@ void CEulerSolver::BC_Far_Field(CGeometry *geometry, CSolver **solver_container,
                                   geometry->node[iPoint]->GetGridVel());
       }
       
+      /*--- Hybrid Roe Blending ---*/
+      if (roe_hybrid)
+          conv_numerics->SetPhiEff(phi_eff);
+        
       /*--- Compute the convective residual using an upwind scheme ---*/
-      
+        
       conv_numerics->ComputeResidual(Residual, Jacobian_i, Jacobian_j, config);
       
       /*--- Update residual value ---*/

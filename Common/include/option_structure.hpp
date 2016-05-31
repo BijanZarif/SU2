@@ -577,7 +577,8 @@ enum ENUM_UPWIND {
   AUSMPWPLUS = 8,             /*!< \brief AUSMPW+ numerical method. */
   CUSP = 9,                   /*!< \brief Convective upwind and split pressure numerical method. */
   CONVECTIVE_TEMPLATE = 10,   /*!< \brief Template for new numerical method . */
-  L2ROE = 11                  /*!< \brief L2ROE numerical method . */
+  L2ROE = 11,                  /*!< \brief L2ROE numerical method . */
+  ROEHYBRID = 12                  /*!< \brief Roe Hybrid numerical method . */
 };
 static const map<string, ENUM_UPWIND> Upwind_Map = CCreateMap<string, ENUM_UPWIND>
 ("NONE", NO_UPWIND)
@@ -591,7 +592,8 @@ static const map<string, ENUM_UPWIND> Upwind_Map = CCreateMap<string, ENUM_UPWIN
 ("CUSP", CUSP)
 ("SCALAR_UPWIND", SCALAR_UPWIND)
 ("CONVECTIVE_TEMPLATE", CONVECTIVE_TEMPLATE)
-("L2ROE", L2ROE);
+("L2ROE", L2ROE)
+("ROEHYBRID", ROEHYBRID);
 
 /*!
  * \brief Spatial numerical order integration

@@ -566,6 +566,8 @@ void CIntegration::Convergence_Monitoring(CGeometry *geometry, CConfig *config, 
 
 void CIntegration::SetDualTime_Solver(CGeometry *geometry, CSolver *solver, CConfig *config, unsigned short iMesh) {
 	unsigned long iPoint;
+//    su2double* aux;
+//    su2double* velx;
   
 	for (iPoint = 0; iPoint < geometry->GetnPoint(); iPoint++) {
 		solver->node[iPoint]->Set_Solution_time_n1();
@@ -573,7 +575,12 @@ void CIntegration::SetDualTime_Solver(CGeometry *geometry, CSolver *solver, CCon
     
 		geometry->node[iPoint]->SetVolume_nM1();
 		geometry->node[iPoint]->SetVolume_n();
-    
+        
+//        aux = solver->node[iPoint]-> GetSolution();
+//        for (unsigned short iDim = 0; iDim < nDim; iDim++)
+//            MeanU[iDim] = val_MeanU[iDim];}
+//        cout << aux[0] << " " << aux[1] << " " << aux[2] << endl;
+        
 		/*--- Store old coordinates in case there is grid movement ---*/
 		if (config->GetGrid_Movement()) {
 			geometry->node[iPoint]->SetCoord_n1();

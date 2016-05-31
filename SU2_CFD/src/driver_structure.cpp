@@ -822,6 +822,13 @@ void CDriver::Numerics_Preprocessing(CNumerics ****numerics_container,
                 numerics_container[iMGlevel][FLOW_SOL][CONV_BOUND_TERM] = new CUpwL2Roe_Flow(nDim, nVar_Flow, config);
               }
               break;
+
+            case ROEHYBRID:
+                  for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++) {
+                      numerics_container[iMGlevel][FLOW_SOL][CONV_TERM] = new CUpwRoeHybrid_Flow(nDim, nVar_Flow, config);
+                      numerics_container[iMGlevel][FLOW_SOL][CONV_BOUND_TERM] = new CUpwRoeHybrid_Flow(nDim, nVar_Flow, config);
+                  }
+                  break;
               
             default : cout << "Upwind scheme not implemented." << endl; exit(EXIT_FAILURE); break;
           }
