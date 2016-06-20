@@ -1373,6 +1373,8 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
   unsigned short iDim, jDim;
     
   //su2double fd_print[nPointDomain];
+  
+  //cout << "# BEGIN" << endl;
     
   for (iPoint = 0; iPoint < nPointDomain; iPoint++) {
     
@@ -1463,6 +1465,229 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
         //fd_print[iPoint]=f_d;
         numerics->SetDistance(distDES_tilde, 0.0);
     }
+    else if (config->GetKind_HybridRANSLES()==SA_ZDES){
+        su2double *Coord_i, *Coord_j, deltax=0.0, deltay=0.0, deltaz=0.0, aux_delta, *Vorticity_i;
+        su2double Omega, ratio_Omegax, ratio_Omegay, ratio_Omegaz;
+        unsigned short nNeigh, iNeigh;
+        unsigned long NumNeigh;
+        
+        Coord_i = geometry->node[iPoint]->GetCoord();
+        nNeigh = geometry->node[iPoint]->GetnPoint();
+        
+        for (iNeigh=0;iNeigh<nNeigh;++iNeigh){
+            NumNeigh = geometry->node[iPoint]->GetPoint(iNeigh);
+            Coord_j = geometry->node[NumNeigh]->GetCoord();
+            aux_delta = abs(Coord_j[0] - Coord_i[0]);
+            deltax = max(deltax,aux_delta);
+            aux_delta = abs(Coord_j[1] - Coord_i[1]);
+            deltay = max(deltay,aux_delta);
+            if (nDim == 3){
+               aux_delta = abs(Coord_j[2] - Coord_i[2]);
+                deltaz = max(deltaz,aux_delta);}
+        }
+
+        Vorticity_i = solver_container[FLOW_SOL]->node[iPoint]->GetVorticity();
+        Omega = sqrt(Vorticity_i[0]*Vorticity_i[0]+ Vorticity_i[1]*Vorticity_i[1]+ Vorticity_i[2]*Vorticity_i[2]);
+        ratio_Omegax = Vorticity_i[0]/Omega;
+        ratio_Omegay = Vorticity_i[1]/Omega;
+        ratio_Omegaz = Vorticity_i[2]/Omega;
+        
+        Delta =sqrt(pow(ratio_Omegax,2.0)*deltay*deltaz + pow(ratio_Omegay,2.0)*deltax*deltaz + pow(ratio_Omegaz,2.0)*deltax*deltay);
+        
+        dist_wall = geometry->node[iPoint]->GetWall_Distance();
+        
+        distDES = Const_DES * Delta;
+        PrimVar_Grad=solver_container[FLOW_SOL]->node[iPoint]->GetGradient_Primitive();
+        
+        uijuij=0.0;
+        for(iDim=0;iDim<nDim;++iDim){
+            for(jDim=0;jDim<nDim;++jDim){
+                uijuij+= PrimVar_Grad[1+iDim][jDim]*PrimVar_Grad[1+iDim][jDim];}}
+        
+        uijuij=sqrt(fabs(uijuij));
+        uijuij=max(uijuij,1e-10);
+        
+        /*--- For compressible solver ---*/
+        
+        rho = solver_container[FLOW_SOL]->node[iPoint]->GetDensity();
+        mu  = solver_container[FLOW_SOL]->node[iPoint]->GetLaminarViscosity();
+        nu=mu/rho;
+        
+        eddy_visc = solver_container[TURB_SOL]->node[iPoint]->GetmuT();
+        nut=eddy_visc/rho;
+        k2=pow(0.41,2.0);
+        r_d= (nut+nu)/(uijuij*k2*pow(dist_wall, 2.0));
+        f_d= 1.0-tanh(pow(8.0*r_d,3.0));
+        distDES_tilde=dist_wall-f_d*max(0.0,(dist_wall-distDES));
+        
+        /*--- Set distance to the surface with DDES distance ---*/
+        //fd_print[iPoint]=f_d;
+        numerics->SetDistance(distDES_tilde, 0.0);
+    }
+    else if (config->GetKind_HybridRANSLES()==SA_EDDES){
+        
+        /*--- An Enhanced Version of DES with Rapid Transition from RANS to LES in Separated Flows.
+         Shur et al.
+         Flow Turbulence Combust - 2015
+         ---*/
+        su2double *Coord_i, *Coord_j, *Vorticity_i, *Vorticity_j;
+        su2double Omega, ratio_Omega[3]={0.0,0.0,0.0}, delta_i[3]={0.0,0.0,0.0}, ln[3]={0.0,0.0,0.0};
+        su2double **PrimVar_Grad_j, f_kh, f_kh_lim;
+        su2double Strain_i[3][3], Strain_j[3][3],StrainDotVort[3]={0.0,0.0,0.0},numVecVort[3]={0.0,0.0,0.0};
+        su2double numerator, denominator, trace0, trace1, VTM_i, ln_max, aux_ln, f_max=1.0, f_min=0.1, a1=0.15, a2=0.3;
+        unsigned short nNeigh, iNeigh, i,j;
+        
+        unsigned long NumNeigh;
+        
+        /*--- Initialize Strain Tensor ---*/
+        for (i=0; i<3; ++i) {
+            for (j=0; j<3; ++j) {
+                Strain_i[i][j]=0.0;
+                Strain_j[i][j]=0.0;
+            }
+        }
+        
+        Coord_i = geometry->node[iPoint]->GetCoord();
+        nNeigh = geometry->node[iPoint]->GetnPoint();
+        PrimVar_Grad=solver_container[FLOW_SOL]->node[iPoint]->GetGradient_Primitive();
+
+        //cout<< "nNeigh: " << nNeigh << endl;
+        
+        /*-- Strain Tensor --*/
+        
+        Strain_i[0][0] = PrimVar_Grad[1][0];
+        Strain_i[1][0] = 0.5*(PrimVar_Grad[2][0] + PrimVar_Grad[1][1]);
+        Strain_i[0][1] = 0.5*(PrimVar_Grad[1][1] + PrimVar_Grad[2][0]);
+        Strain_i[1][1] = PrimVar_Grad[2][1];
+        if (nDim==3){
+            Strain_i[0][2] = 0.5*(PrimVar_Grad[3][0] + PrimVar_Grad[1][2]);
+            Strain_i[1][2] = 0.5*(PrimVar_Grad[3][1] + PrimVar_Grad[2][2]);
+            Strain_i[2][0] = 0.5*(PrimVar_Grad[1][2] + PrimVar_Grad[3][0]);
+            Strain_i[2][1] = 0.5*(PrimVar_Grad[2][2] + PrimVar_Grad[3][1]);
+            Strain_i[2][0] = PrimVar_Grad[3][2];
+        }
+        
+        Vorticity_i = solver_container[FLOW_SOL]->node[iPoint]->GetVorticity();
+        Omega = sqrt(Vorticity_i[0]*Vorticity_i[0]+ Vorticity_i[1]*Vorticity_i[1]+ Vorticity_i[2]*Vorticity_i[2]);
+
+        for (i=0; i<3; ++i) {
+            ratio_Omega[i] = Vorticity_i[i]/Omega;
+        }
+
+        
+        StrainDotVort[0] = Strain_i[0][0]*Vorticity_i[0]+Strain_i[0][1]*Vorticity_i[1]+Strain_i[0][2]*Vorticity_i[2];
+        StrainDotVort[1] = Strain_i[1][0]*Vorticity_i[0]+Strain_i[1][1]*Vorticity_i[1]+Strain_i[1][2]*Vorticity_i[2];
+        StrainDotVort[2] = Strain_i[2][0]*Vorticity_i[0]+Strain_i[2][1]*Vorticity_i[1]+Strain_i[2][2]*Vorticity_i[2];
+        
+        //cout << "StrainDotVort: " << StrainDotVort[0] << " " << StrainDotVort[1] << " " << StrainDotVort[2] << endl;
+        
+        numVecVort[0]=StrainDotVort[1]*Vorticity_i[2] - StrainDotVort[2]*Vorticity_i[1];
+        numVecVort[1]=StrainDotVort[2]*Vorticity_i[0] - StrainDotVort[0]*Vorticity_i[2];
+        numVecVort[2]=StrainDotVort[0]*Vorticity_i[1] - StrainDotVort[1]*Vorticity_i[0];
+        
+        numerator = sqrt(6.0) * sqrt(numVecVort[0]*numVecVort[0] + numVecVort[1]*numVecVort[1] + numVecVort[2]*numVecVort[2]);
+        trace0 = 3.0*(pow(Strain_i[0][0],2.0) + pow(Strain_i[1][1],2.0) + pow(Strain_i[2][2],2.0));
+        trace1 = pow(Strain_i[0][0] + Strain_i[1][1] + Strain_i[2][2],2.0);
+        denominator = pow(Omega, 2.0) * sqrt(trace0-trace1);        
+        
+        /*--- For compressible solver ---*/
+        
+        rho = solver_container[FLOW_SOL]->node[iPoint]->GetDensity();
+        mu  = solver_container[FLOW_SOL]->node[iPoint]->GetLaminarViscosity();
+        nu=mu/rho;
+        
+        eddy_visc = solver_container[TURB_SOL]->node[iPoint]->GetmuT();
+        nut=eddy_visc/rho;
+
+        VTM_i = (numerator/denominator) * max(1.0,0.2*nu/nut);
+        
+        //cout << "VTM: " << VTM_i << endl;
+        
+        ln_max=0.0;
+        for (iNeigh=0;iNeigh<nNeigh;++iNeigh){
+            NumNeigh = geometry->node[iPoint]->GetPoint(iNeigh);
+            Coord_j = geometry->node[NumNeigh]->GetCoord();
+            delta_i[0] = fabs(Coord_j[0] - Coord_i[0]);
+            delta_i[1] = fabs(Coord_j[1] - Coord_i[1]);
+            if (nDim == 3)
+                delta_i[2] = fabs(Coord_j[2] - Coord_i[2]);
+            ln[0] = delta_i[1]*ratio_Omega[2] - delta_i[2]*ratio_Omega[1];
+            ln[1] = delta_i[2]*ratio_Omega[0] - delta_i[0]*ratio_Omega[2];
+            ln[2] = delta_i[0]*ratio_Omega[1] - delta_i[1]*ratio_Omega[0];
+            aux_ln = sqrt(ln[0]*ln[0] + ln[1]*ln[1] + ln[2]*ln[2]);
+            //cout << aux_ln << endl;
+            ln_max = max(ln_max,aux_ln);
+            
+            PrimVar_Grad_j=solver_container[FLOW_SOL]->node[NumNeigh]->GetGradient_Primitive();
+            
+            /*-- Strain Tensor --*/
+            
+            Strain_j[0][0] = PrimVar_Grad_j[1][0];
+            Strain_j[1][0] = 0.5*(PrimVar_Grad_j[2][0] + PrimVar_Grad_j[1][1]);
+            Strain_j[0][1] = 0.5*(PrimVar_Grad_j[1][1] + PrimVar_Grad_j[2][0]);
+            Strain_j[1][1] = PrimVar_Grad_j[2][1];
+            if (nDim==3){
+                Strain_j[0][2] = 0.5*(PrimVar_Grad_j[3][0] + PrimVar_Grad_j[1][2]);
+                Strain_j[1][2] = 0.5*(PrimVar_Grad_j[3][1] + PrimVar_Grad_j[2][2]);
+                Strain_j[2][0] = 0.5*(PrimVar_Grad_j[1][2] + PrimVar_Grad_j[3][0]);
+                Strain_j[2][1] = 0.5*(PrimVar_Grad_j[2][2] + PrimVar_Grad_j[3][1]);
+                Strain_j[2][0] = PrimVar_Grad_j[3][2];
+            }
+            
+            Vorticity_j = solver_container[FLOW_SOL]->node[NumNeigh]->GetVorticity();
+            Omega = sqrt(Vorticity_j[0]*Vorticity_j[0]+ Vorticity_j[1]*Vorticity_j[1]+ Vorticity_j[2]*Vorticity_j[2]);
+            StrainDotVort[0] = Strain_j[0][0]*Vorticity_j[0]+Strain_j[0][1]*Vorticity_j[1]+Strain_j[0][2]*Vorticity_j[2];
+            StrainDotVort[1] = Strain_j[1][0]*Vorticity_j[0]+Strain_j[1][1]*Vorticity_j[1]+Strain_j[1][2]*Vorticity_j[2];
+            StrainDotVort[2] = Strain_j[2][0]*Vorticity_j[0]+Strain_j[2][1]*Vorticity_j[1]+Strain_j[2][2]*Vorticity_j[2];
+            
+            numVecVort[0]=StrainDotVort[1]*Vorticity_j[2] - StrainDotVort[2]*Vorticity_j[1];
+            numVecVort[1]=StrainDotVort[2]*Vorticity_j[0] - StrainDotVort[0]*Vorticity_j[2];
+            numVecVort[2]=StrainDotVort[0]*Vorticity_j[1] - StrainDotVort[1]*Vorticity_j[0];
+            
+            numerator = sqrt(6.0) * sqrt(numVecVort[0]*numVecVort[0] + numVecVort[1]*numVecVort[1] + numVecVort[2]*numVecVort[2]);
+            trace0 = 3.0*(pow(Strain_j[0][0],2.0) + pow(Strain_j[1][1],2.0) + pow(Strain_j[2][2],2.0));
+            trace1 = pow(Strain_j[0][0] + Strain_j[1][1] + Strain_j[2][2],2.0);
+            denominator = pow(Omega, 2.0) * sqrt(trace0-trace1);
+            //cout << "VTM: " << numerator/denominator << endl;
+            VTM_i += (numerator/denominator) * max(1.0,0.2*nu/nut);
+        }
+        
+        //cout << ln_max << endl;
+        VTM_i = (VTM_i/fabs(nNeigh + 1.0));
+        
+        f_kh = max(f_min, min(f_max, f_min + ((f_max - f_min)/(a2 - a1)) * (VTM_i - a1)));
+                    
+        dist_wall = geometry->node[iPoint]->GetWall_Distance();
+        
+        uijuij=0.0;
+        for(iDim=0;iDim<nDim;++iDim){
+            for(jDim=0;jDim<nDim;++jDim){
+                uijuij+= PrimVar_Grad[1+iDim][jDim]*PrimVar_Grad[1+iDim][jDim];}}
+        
+        uijuij=sqrt(fabs(uijuij));
+        uijuij=max(uijuij,1e-10);
+        
+        k2=pow(0.41,2.0);
+        r_d= (nut+nu)/(uijuij*k2*pow(dist_wall, 2.0));
+        f_d= 1.0-tanh(pow(8.0*r_d,3.0));
+        
+        if (f_d < (1.0-0.01)) {
+            f_kh_lim = 1.0;
+        }
+        else {
+            f_kh_lim = f_kh;
+        }
+        
+        Delta = (ln_max/sqrt(3.0)) * f_kh_lim;
+        distDES = Const_DES * Delta;
+        
+        distDES_tilde=dist_wall-f_d*max(0.0,(dist_wall-distDES));
+        
+        //cout<< Coord_i[0] << " " << Coord_i[1] << " " << Coord_i[2] << " " << max(f_min, min(f_max, f_min + ((f_max - f_min)/(a2 - a1)) * (VTM_i - a1))) << " " << Delta << " " << f_d << endl;
+        
+        /*--- Set distance to the surface with DDES distance ---*/
+        numerics->SetDistance(distDES_tilde, 0.0);
+    }
       
     /*--- Compute the source term ---*/
     
@@ -1509,6 +1734,7 @@ void CTurbSASolver::Source_Residual(CGeometry *geometry, CSolver **solver_contai
       
     }
   }
+//    cout << "# END" << endl;
 //  string name("u_n");
 //  string extension(".txt");
 //  string filename (name+extension);
