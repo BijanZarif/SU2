@@ -2020,7 +2020,7 @@ CBaselineSolver::CBaselineSolver(CGeometry *geometry, CConfig *config, unsigned 
         /*--- First, remove any variables for the turbulence model that
          appear in the restart file before the grid velocities. ---*/
         
-        if (turb_model == SA || turb_model == SA_NEG) {
+        if (turb_model == SA || turb_model == SA_NEG || turb_model == SA_E || turb_model == SA_E_COMP || turb_model == SA_COMP) {
           point_line >> dull_val;
         } else if (turb_model == SST) {
           point_line >> dull_val >> dull_val;
@@ -2311,9 +2311,7 @@ void CBaselineSolver::LoadRestart(CGeometry **geometry, CSolver ***solver, CConf
   bool adjoint = ( config->GetContinuous_Adjoint() || config->GetDiscrete_Adjoint() ); 
   unsigned short iZone = config->GetiZone();
   unsigned short nZone = geometry[iZone]->GetnZone();
-<<<<<<< HEAD
 
-=======
   bool grid_movement  = config->GetGrid_Movement();
   bool steady_restart = config->GetSteadyRestart();
   unsigned short turb_model = config->GetKind_Turb_Model();
@@ -2323,7 +2321,6 @@ void CBaselineSolver::LoadRestart(CGeometry **geometry, CSolver ***solver, CConf
   for (iDim = 0; iDim < nDim; iDim++)
     Coord[iDim] = 0.0;
   
->>>>>>> su2code/develop
   /*--- Retrieve filename from config ---*/
 
   if (adjoint) {
@@ -2399,14 +2396,10 @@ void CBaselineSolver::LoadRestart(CGeometry **geometry, CSolver ***solver, CConf
 
   getline (solution_file, text_line);
 
-<<<<<<< HEAD
-  while (getline (solution_file, text_line) && iPoint_Global < geometry[iZone]->GetnPointDomain()) {
-=======
   for (iPoint_Global = 0; iPoint_Global < geometry[iZone]->GetGlobal_nPointDomain(); iPoint_Global++ ) {
     
     getline (solution_file, text_line);
     
->>>>>>> su2code/develop
     istringstream point_line(text_line);
 
     /*--- Retrieve local index. If this node from the restart file lives
@@ -2427,10 +2420,7 @@ void CBaselineSolver::LoadRestart(CGeometry **geometry, CSolver ***solver, CConf
         point_line >> Solution[iField];
 
       node[iPoint_Local]->SetSolution(Solution);
-<<<<<<< HEAD
 
-
-=======
      
       /*--- For dynamic meshes, read in and store the
        grid coordinates and grid velocities for each node. ---*/
@@ -2440,7 +2430,7 @@ void CBaselineSolver::LoadRestart(CGeometry **geometry, CSolver ***solver, CConf
         /*--- First, remove any variables for the turbulence model that
          appear in the restart file before the grid velocities. ---*/
         
-        if (turb_model == SA || turb_model == SA_NEG) {
+        if (turb_model == SA || turb_model == SA_NEG || turb_model == SA_E || turb_model == SA_E_COMP || turb_model == SA_COMP) {
           point_line >> dull_val;
         } else if (turb_model == SST) {
           point_line >> dull_val >> dull_val;
@@ -2462,7 +2452,7 @@ void CBaselineSolver::LoadRestart(CGeometry **geometry, CSolver ***solver, CConf
         }
         
       }
->>>>>>> su2code/develop
+
     }
     
   }
